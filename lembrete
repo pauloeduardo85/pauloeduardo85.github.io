@@ -1,0 +1,2 @@
+grep -Ril "Prime" ./
+grep -nr 'yourString'
