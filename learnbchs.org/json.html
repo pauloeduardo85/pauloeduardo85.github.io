@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>JSON//BCHS: an introduction</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="highlight.css" />
+		<link rel="stylesheet" href="json.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="JSON and BCHS" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/json.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="How and why to use JSON for serving BCHS content." />
+		<meta name="description" content="How and why to use JSON for serving BCHS content." />
+	</head>
+	<body>
+		<section itemscope="itemscope" itemtype="http://schema.org/WebPage">
+			<header>
+				<img itemprop="image" src="logo-white.png" alt="BCHS Logo" />
+				<h1>
+					<a href="index.html" itemprop="name">BCHS</a>
+				</h1>
+				<nav>
+					<a href="tools.html"><span>tools</span></a>
+					<a href="easy.html"><span>example</span></a>
+					<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-github"></i></a>
+				</nav>
+			</header>
+			<article>
+				<input type="radio" name="steps" id="slider1" value="step1" checked="checked" />
+				<input type="radio" name="steps" id="slider2" value="step2" />
+				<input type="radio" name="steps" id="slider3" value="step3" />
+				<header>
+					<h2>JSON</h2>
+					<div>
+						<img src="arrow-up.png" />
+						<img src="arrow-down.png" />
+					</div>
+					<h3>BSD, C, httpd, SQLite</h3>
+				</header>
+				<p>
+					BCHS works especially well for JSON web applications, which is the <i>de jure</i> method for building
+					dynamic web sites.
+					These applications have a well-defined split between back-end (BCHS), transport protocol (<a href="http://www.json.org/">JSON</a>), and front-end (<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">JavaScript</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/CSS">CSS</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5">HTML5</a>).
+					And there are plenty of tools available to build, document, and deploy your work.
+					Why is this an improvement over simply emitting HTML?
+				</p>
+				<div>
+					<ul>
+						<li>
+							server load: your user's browser is handling one request at a time&#8212;you're handling
+							many, and the extra processing adds up
+						</li>
+						<li>
+							updates to site design don't require redeploying your application
+						</li>
+						<li>
+							reduced code-bloat from hard-coding complicated HTML trees
+						</li>
+						<li>
+							less work-flow dependency between back-end developer and front-end developer/designer
+						</li>
+						<li>
+							JSON is natively understood by JavaScript, which itself is a standard component of the
+							web browser
+						</li>
+					</ul>
+				</div>
+				<p>
+					Most (all?) complaints of JSON web applications fall to poor front-end decisions: using enormous
+					<q>frameworks</q>, <a href="https://developer.mozilla.org/en-US/docs/Web/Security/CSP">CSP</a>
+					violations, and really just plain shitty code.
+					In this short document, I'll sketch out how to set up your BCHS environment for JSON applications.
+					For a full working system using this method, see <a href="https://github.com/kristapsdz/dblg">dblg</a>.
+				</p>
+				<nav>
+					<label for="slider1">
+						puts(<span>c</span>);
+					</label>
+					<label for="slider2">
+						{<span>json</span>}
+					</label>
+					<label for="slider3">
+						&lt;<span>html</span>&gt;
+					</label>
+				</nav>
+				<div class="slides">
+					<div class="overflow">
+						<div class="slidesinner">
+							<section>
+								<p>
+									Begin with the actual web application source.
+									I use <a href="https://kristaps.bsd.lv/kcgi">kcgi(3)</a> and use <a href="https://man.openbsd.org/pledge.2">pledge(2)</a> (so it
+									requires OpenBSD, of course) to safeguard our operating system.
+									In this example, I just emit a simple greeting in a JSON container.
+								</p>
+								<figure>
+									<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl ppc">#include &lt;err.h&gt;</span>
+<span class="hl lin">    2 </span><span class="hl ppc">#include &lt;stdarg.h&gt;</span>
+<span class="hl lin">    3 </span><span class="hl ppc">#include &lt;stdint.h&gt;</span>
+<span class="hl lin">    4 </span><span class="hl ppc">#include &lt;stdlib.h&gt;</span>
+<span class="hl lin">    5 </span><span class="hl ppc">#include &lt;unistd.h&gt;</span>
+<span class="hl lin">    6 </span>
+<span class="hl lin">    7 </span><span class="hl ppc">#include &lt;kcgi.h&gt;</span>
+<span class="hl lin">    8 </span><span class="hl ppc">#include &lt;kcgijson.h&gt;</span>
+<span class="hl lin">    9 </span>
+<span class="hl lin">   10 </span><span class="hl kwb">int</span>
+<span class="hl lin">   11 </span><span class="hl kwd">main</span><span class="hl opt">(</span><span class="hl kwb">void</span><span class="hl opt">)</span>
+<span class="hl lin">   12 </span><span class="hl opt">{</span>
+<span class="hl lin">   13 </span>  <span class="hl kwb">struct</span> kreq r<span class="hl opt">;</span>
+<span class="hl lin">   14 </span>  <span class="hl kwb">struct</span> kjsonreq req<span class="hl opt">;</span>
+<span class="hl lin">   15 </span>  <span class="hl kwb">const char</span> <span class="hl opt">*</span>page <span class="hl opt">=</span> <span class="hl str">&quot;index&quot;</span><span class="hl opt">;</span>
+<span class="hl lin">   16 </span>
+<span class="hl lin">   17 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">khttp_parse</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> NULL<span class="hl opt">,</span> <span class="hl num">0</span><span class="hl opt">, &amp;</span>page<span class="hl opt">,</span> <span class="hl num">1</span><span class="hl opt">,</span> <span class="hl num">0</span><span class="hl opt">) !=</span> KCGI_OK<span class="hl opt">)</span>
+<span class="hl lin">   18 </span>    <span class="hl kwa">return</span> EXIT_FAILURE<span class="hl opt">;</span>
+<span class="hl lin">   19 </span>
+<span class="hl lin">   20 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span> 
+<span class="hl lin">   21 </span>    <span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   22 </span>
+<span class="hl lin">   23 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_STATUS<span class="hl opt">],</span> 
+<span class="hl lin">   24 </span>    <span class="hl str">&quot;%s&quot;</span><span class="hl opt">,</span> khttps<span class="hl opt">[</span>KHTTP_200<span class="hl opt">]);</span>
+<span class="hl lin">   25 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_CONTENT_TYPE<span class="hl opt">],</span> 
+<span class="hl lin">   26 </span>    <span class="hl str">&quot;%s&quot;</span><span class="hl opt">,</span> kmimetypes<span class="hl opt">[</span>r<span class="hl opt">.</span>mime<span class="hl opt">]);</span>
+<span class="hl lin">   27 </span>  <span class="hl kwd">khttp_body</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">   28 </span>  <span class="hl kwd">kjson_open</span><span class="hl opt">(&amp;</span>req<span class="hl opt">, &amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">   29 </span>  <span class="hl kwd">kjson_obj_open</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">   30 </span>  <span class="hl kwd">kjson_putstringp</span><span class="hl opt">(&amp;</span>req<span class="hl opt">,</span> <span class="hl str">&quot;greeting&quot;</span><span class="hl opt">,</span> <span class="hl str">&quot;hello, world&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   31 </span>  <span class="hl kwd">kjson_obj_close</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">   32 </span>  <span class="hl kwd">kjson_close</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">   33 </span>  <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">   34 </span>  <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">   35 </span><span class="hl opt">}</span>
+</pre></article>
+								</figure>
+							</section>
+							<section>
+								<p>
+									In most large systems, seperate people work the front-end (HTML5, CSS,
+									JS, etc.) and the back-end (BCHS).
+									We can document the interface between this by using <a href="http://swagger.io/">Swagger</a>, which hooks into <a href="http://json-schema.org/">JSON Schema</a> to document the
+									input and output of each resource.
+								</p>
+								<figure>
+									<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwa">{</span>
+<span class="hl lin">    2 </span> <span class="hl kwc">&quot;swagger&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;2.0&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">    3 </span> <span class="hl kwc">&quot;info&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">    4 </span>  <span class="hl kwc">&quot;title&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;test&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">    5 </span>  <span class="hl kwc">&quot;description&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;this is sample documentation&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">    6 </span>  <span class="hl kwc">&quot;contact&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">    7 </span>   <span class="hl kwc">&quot;name&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;Kristaps Dzonsons&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">    8 </span>   <span class="hl kwc">&quot;email&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;kristaps&#64;bsd.lv&quot;</span>
+<span class="hl lin">    9 </span>  <span class="hl kwa">}</span><span class="hl opt">,</span>
+<span class="hl lin">   10 </span>  <span class="hl kwc">&quot;version&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;0.0.1&quot;</span>
+<span class="hl lin">   11 </span> <span class="hl kwa">}</span><span class="hl opt">,</span>
+<span class="hl lin">   12 </span> <span class="hl kwc">&quot;paths&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   13 </span>  <span class="hl str">&quot;/index.json&quot;</span> <span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   14 </span>   <span class="hl kwc">&quot;get&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   15 </span>    <span class="hl kwc">&quot;description&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;nice greeting&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">   16 </span>    <span class="hl kwc">&quot;produces&quot;</span><span class="hl opt">:</span> <span class="hl kwb">[</span> <span class="hl str">&quot;application/json&quot;</span> <span class="hl kwb">]</span><span class="hl opt">,</span>
+<span class="hl lin">   17 </span>    <span class="hl kwc">&quot;responses&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   18 </span>     <span class="hl kwc">&quot;200&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   19 </span>       <span class="hl kwc">&quot;description&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;success&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">   20 </span>       <span class="hl kwc">&quot;schema&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span> 
+<span class="hl lin">   21 </span>        <span class="hl kwc">&quot;type&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;object&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">   22 </span>        <span class="hl kwc">&quot;properties&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   23 </span>         <span class="hl kwc">&quot;greeting&quot;</span><span class="hl opt">:</span> <span class="hl kwa">{</span>
+<span class="hl lin">   24 </span>          <span class="hl kwc">&quot;description&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;a greeting&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">   25 </span>          <span class="hl kwc">&quot;type&quot;</span><span class="hl opt">:</span> <span class="hl str">&quot;string&quot;</span>
+<span class="hl lin">   26 </span>         <span class="hl kwa">}</span>
+<span class="hl lin">   27 </span>        <span class="hl kwa">}</span><span class="hl opt">,</span>
+<span class="hl lin">   28 </span>        <span class="hl kwc">&quot;required&quot;</span><span class="hl opt">:</span> <span class="hl kwb">[</span> <span class="hl str">&quot;greeting&quot;</span> <span class="hl kwb">]</span>
+<span class="hl lin">   29 </span>       <span class="hl kwa">}</span>
+<span class="hl lin">   30 </span>     <span class="hl kwa">}</span>
+<span class="hl lin">   31 </span>    <span class="hl kwa">}</span>
+<span class="hl lin">   32 </span>   <span class="hl kwa">}</span>
+<span class="hl lin">   33 </span>  <span class="hl kwa">}</span>
+<span class="hl lin">   34 </span> <span class="hl kwa">}</span>
+<span class="hl lin">   35 </span><span class="hl kwa">}</span>
+</pre></article>
+								</figure>
+							</section>
+							<section>
+								<p>
+									Front-end work!  In this incredibly simple example, we use <a href="https://developer.mozilla.org/en-US/docs/AJAX">AJAX</a> to
+									asynchronously invoke our web application and put the result into an
+									identified element.
+									We use <a href="http://vanilla-js.com/">vanilla JS</a> and pay deference
+									to <a href="https://developer.mozilla.org/en-US/docs/Web/Security/CSP">CSP</a>
+									by processing fully in the script.
+									You'll obviously need to put your own application URL in the loader.
+								</p>
+								<figure>
+									<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwa">&lt;!DOCTYPE</span> html<span class="hl kwa">&gt;</span>
+<span class="hl lin">    2 </span><span class="hl kwa">&lt;html&gt;</span>
+<span class="hl lin">    3 </span>  <span class="hl kwa">&lt;head&gt;</span>
+<span class="hl lin">    4 </span>    <span class="hl kwa">&lt;meta</span> <span class="hl kwb">charset</span>=<span class="hl str">&quot;utf-8&quot;</span> <span class="hl kwa">/&gt;</span> 
+<span class="hl lin">    5 </span>    <span class="hl kwa">&lt;title&gt;</span>sample<span class="hl kwa">&lt;/title&gt;</span>
+<span class="hl lin">    6 </span>    <span class="hl kwa">&lt;script&gt;</span>
+<span class="hl lin">    7 </span>    <span class="hl kwa">function</span> <span class="hl kwd">success</span><span class="hl opt">(</span>resp<span class="hl opt">) {</span>
+<span class="hl lin">    8 </span>      <span class="hl kwa">var</span> res<span class="hl opt">;</span>
+<span class="hl lin">    9 </span>      <span class="hl kwa">try</span> <span class="hl opt">{</span>
+<span class="hl lin">   10 </span>        res <span class="hl opt">=</span> JSON<span class="hl opt">.</span><span class="hl kwd">parse</span><span class="hl opt">(</span>resp<span class="hl opt">);</span>
+<span class="hl lin">   11 </span>      <span class="hl opt">}</span> <span class="hl kwa">catch</span> <span class="hl opt">(</span>error<span class="hl opt">) {</span>
+<span class="hl lin">   12 </span>        <span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">   13 </span>      <span class="hl opt">}</span>
+<span class="hl lin">   14 </span>      document<span class="hl opt">.</span><span class="hl kwd">getElementById</span><span class="hl opt">(</span><span class="hl str">&apos;greeting&apos;</span><span class="hl opt">).</span>appendChild
+<span class="hl lin">   15 </span>        <span class="hl opt">(</span>document<span class="hl opt">.</span><span class="hl kwd">createTextNode</span><span class="hl opt">(</span>res<span class="hl opt">.</span>greeting<span class="hl opt">));</span>
+<span class="hl lin">   16 </span>    <span class="hl opt">}</span>
+<span class="hl lin">   17 </span>    document<span class="hl opt">.</span><span class="hl kwd">addEventListener</span><span class="hl opt">(</span><span class="hl str">&apos;DOMContentLoaded&apos;</span><span class="hl opt">,</span> <span class="hl kwa">function</span><span class="hl opt">() {</span>
+<span class="hl lin">   18 </span>      <span class="hl kwa">var</span> xmh <span class="hl opt">=</span> <span class="hl kwa">new</span> <span class="hl kwd">XMLHttpRequest</span><span class="hl opt">();</span>
+<span class="hl lin">   19 </span>      xmh<span class="hl opt">.</span><span class="hl kwd">onreadystatechange</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">() {</span>
+<span class="hl lin">   20 </span>        <span class="hl kwa">if</span> <span class="hl opt">(</span>xmh<span class="hl opt">.</span>readyState <span class="hl opt">===</span> <span class="hl num">4</span> <span class="hl opt">&amp;&amp;</span> xmh<span class="hl opt">.</span>status <span class="hl opt">===</span> <span class="hl num">200</span><span class="hl opt">)</span>
+<span class="hl lin">   21 </span>          <span class="hl kwd">success</span><span class="hl opt">(</span>xmh<span class="hl opt">.</span>responseText<span class="hl opt">);</span>
+<span class="hl lin">   22 </span>      <span class="hl opt">};</span>
+<span class="hl lin">   23 </span>      xmh<span class="hl opt">.</span><span class="hl kwd">open</span><span class="hl opt">(</span><span class="hl str">&apos;GET&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;/cgi-bin/app/index.json&apos;</span><span class="hl opt">,</span> <span class="hl kwa">true</span><span class="hl opt">);</span>
+<span class="hl lin">   24 </span>      xmh<span class="hl opt">.</span><span class="hl kwd">send</span><span class="hl opt">(</span><span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">   25 </span>    <span class="hl opt">});</span>
+<span class="hl lin">   26 </span>    <span class="hl kwa">&lt;/script&gt;</span>
+<span class="hl lin">   27 </span>  <span class="hl kwa">&lt;/head&gt;</span>
+<span class="hl lin">   28 </span>  <span class="hl kwa">&lt;body&gt;</span>
+<span class="hl lin">   29 </span>    <span class="hl kwa">&lt;span</span> <span class="hl kwb">id</span>=<span class="hl str">&quot;greeting&quot;</span><span class="hl kwa">&gt;&lt;/span&gt;</span>
+<span class="hl lin">   30 </span>  <span class="hl kwa">&lt;/body&gt;</span>
+<span class="hl lin">   31 </span><span class="hl kwa">&lt;/html&gt;</span>
+</pre></article>
+								</figure>
+							</section>
+						</div>
+					</div>
+				</div>
+			</article>
+			<footer>
+				<div>
+					<a href="https://creativecommons.org/licenses/by/4.0/"><i class="fa fa-creative-commons"></i></a> 
+					<a rel="author" href="https://kristaps.bsd.lv">Kristaps Dzonsons</a>
+				</div>
+			</footer>
+		</section>
+	</body>
+</html>
+
+

@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Source file</title>
+<style type="text/css">
+/* highlight theme: Github Source View */
+body.hl	{ background-color:#ffffff; }
+pre.hl	{ color:#000000; background-color:#ffffff; font-size:10pt; font-family:'Courier New',monospace;}
+.hl.num { color:#0086b3; }
+.hl.esc { color:#183691; }
+.hl.str { color:#183691; }
+.hl.pps { color:#183691; }
+.hl.slc { color:#969896; }
+.hl.com { color:#969896; }
+.hl.ppc { color:#a71d5d; }
+.hl.opt { color:#000000; }
+.hl.ipl { color:#183691; }
+.hl.lin { color:#b2b2b2; }
+.hl.kwa { color:#a71d5d; }
+.hl.kwb { color:#0086b3; }
+.hl.kwc { color:#0086b3; }
+.hl.kwd { color:#0086b3; }
+</style>
+</head>
+<body class="hl">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl com">/**</span>
+<span class="hl lin">    2 </span><span class="hl com"> * Top-level namespace of these objects.</span>
+<span class="hl lin">    3 </span><span class="hl com"> * &#64;namespace</span>
+<span class="hl lin">    4 </span><span class="hl com"> */</span>
+<span class="hl lin">    5 </span><span class="hl kwa">var</span> ort<span class="hl opt">;</span>
+<span class="hl lin">    6 </span><span class="hl opt">(</span><span class="hl kwa">function</span><span class="hl opt">(</span>ort<span class="hl opt">) {</span>
+<span class="hl lin">    7 </span>	<span class="hl str">&apos;use strict&apos;</span><span class="hl opt">;</span>
+<span class="hl lin">    8 </span>
+<span class="hl lin">    9 </span>	<span class="hl com">/**</span>
+<span class="hl lin">   10 </span><span class="hl com">	 * Convenience function to resolve a set of translated strings into a </span>
+<span class="hl lin">   11 </span><span class="hl com">	 * single one depending upon the current language.</span>
+<span class="hl lin">   12 </span><span class="hl com">	 * &#64;param {langmap} vals - All translations of a given word.</span>
+<span class="hl lin">   13 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">   14 </span><span class="hl com">	 * &#64;function _strlang</span>
+<span class="hl lin">   15 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">   16 </span><span class="hl com">	 */</span>
+<span class="hl lin">   17 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_strlang</span><span class="hl opt">(</span>vals<span class="hl opt">)</span>
+<span class="hl lin">   18 </span>	<span class="hl opt">{</span>
+<span class="hl lin">   19 </span>		<span class="hl kwa">var</span> lang<span class="hl opt">;</span>
+<span class="hl lin">   20 </span>		lang <span class="hl opt">=</span> document<span class="hl opt">.</span>documentElement<span class="hl opt">.</span>lang<span class="hl opt">;</span>
+<span class="hl lin">   21 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> lang <span class="hl opt">&amp;&amp;</span> lang <span class="hl kwa">in</span> vals<span class="hl opt">)</span>
+<span class="hl lin">   22 </span>			<span class="hl kwa">return</span> vals<span class="hl opt">[</span>lang<span class="hl opt">];</span>
+<span class="hl lin">   23 </span>		<span class="hl kwa">else if</span> <span class="hl opt">(</span><span class="hl str">&apos;_default&apos;</span> <span class="hl kwa">in</span> vals<span class="hl opt">)</span>
+<span class="hl lin">   24 </span>			<span class="hl kwa">return</span> vals<span class="hl opt">[</span><span class="hl str">&apos;_default&apos;</span><span class="hl opt">];</span>
+<span class="hl lin">   25 </span>		<span class="hl kwa">else</span>
+<span class="hl lin">   26 </span>			<span class="hl kwa">return</span> <span class="hl str">&apos;&apos;</span><span class="hl opt">;</span>
+<span class="hl lin">   27 </span>	<span class="hl opt">}</span>
+<span class="hl lin">   28 </span>
+<span class="hl lin">   29 </span>	<span class="hl com">/**</span>
+<span class="hl lin">   30 </span><span class="hl com">	 * Used exclusively by enumerations and bitfields to do language </span>
+<span class="hl lin">   31 </span><span class="hl com">	 * replacement conditional upon the label (&lt;i&gt;jslabel&lt;/i&gt; in the </span>
+<span class="hl lin">   32 </span><span class="hl com">	 * configuration).</span>
+<span class="hl lin">   33 </span><span class="hl com">	 * Like {&#64;link ort._replcl} with inclusion set to false.</span>
+<span class="hl lin">   34 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">   35 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">   36 </span><span class="hl com">	 * &#64;param {String} name - The class name we search for within the </span>
+<span class="hl lin">   37 </span><span class="hl com">	 * root (not inclusive).</span>
+<span class="hl lin">   38 </span><span class="hl com">	 * &#64;param {langmap} vals - All possible translations.</span>
+<span class="hl lin">   39 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">   40 </span><span class="hl com">	 * &#64;function _replcllang</span>
+<span class="hl lin">   41 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">   42 </span><span class="hl com">	 */</span>
+<span class="hl lin">   43 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_replcllang</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> vals<span class="hl opt">)</span>
+<span class="hl lin">   44 </span>	<span class="hl opt">{</span>
+<span class="hl lin">   45 </span>		<span class="hl kwd">_replcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwd">_strlang</span><span class="hl opt">(</span>vals<span class="hl opt">),</span> <span class="hl kwa">false</span><span class="hl opt">);</span>
+<span class="hl lin">   46 </span>	<span class="hl opt">}</span>
+<span class="hl lin">   47 </span>
+<span class="hl lin">   48 </span>	<span class="hl com">/**</span>
+<span class="hl lin">   49 </span><span class="hl com">	 * Used exclusively by enumerations and bitfields to do language </span>
+<span class="hl lin">   50 </span><span class="hl com">	 * replacement conditional upon the label (&lt;i&gt;jslabel&lt;/i&gt; in the </span>
+<span class="hl lin">   51 </span><span class="hl com">	 * configuration).</span>
+<span class="hl lin">   52 </span><span class="hl com">	 * Like {&#64;link ort._repl}.</span>
+<span class="hl lin">   53 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">   54 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">   55 </span><span class="hl com">	 * &#64;param {langmap} vals - All possible translations.</span>
+<span class="hl lin">   56 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">   57 </span><span class="hl com">	 * &#64;function _repllang</span>
+<span class="hl lin">   58 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">   59 </span><span class="hl com">	 */</span>
+<span class="hl lin">   60 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_repllang</span><span class="hl opt">(</span>e<span class="hl opt">,</span> vals<span class="hl opt">)</span>
+<span class="hl lin">   61 </span>	<span class="hl opt">{</span>
+<span class="hl lin">   62 </span>		<span class="hl kwd">_repl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl kwd">_strlang</span><span class="hl opt">(</span>vals<span class="hl opt">));</span>
+<span class="hl lin">   63 </span>	<span class="hl opt">}</span>
+<span class="hl lin">   64 </span>
+<span class="hl lin">   65 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_attr</span><span class="hl opt">(</span>e<span class="hl opt">,</span> attr<span class="hl opt">,</span> text<span class="hl opt">)</span>
+<span class="hl lin">   66 </span>	<span class="hl opt">{</span>
+<span class="hl lin">   67 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">   68 </span>			e<span class="hl opt">.</span><span class="hl kwd">setAttribute</span><span class="hl opt">(</span>attr<span class="hl opt">,</span> text<span class="hl opt">);</span>
+<span class="hl lin">   69 </span>	<span class="hl opt">}</span>
+<span class="hl lin">   70 </span>
+<span class="hl lin">   71 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_rattr</span><span class="hl opt">(</span>e<span class="hl opt">,</span> attr<span class="hl opt">)</span>
+<span class="hl lin">   72 </span>	<span class="hl opt">{</span>
+<span class="hl lin">   73 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">   74 </span>			e<span class="hl opt">.</span><span class="hl kwd">removeAttribute</span><span class="hl opt">(</span>attr<span class="hl opt">);</span>
+<span class="hl lin">   75 </span>	<span class="hl opt">}</span>
+<span class="hl lin">   76 </span>
+<span class="hl lin">   77 </span>	<span class="hl com">/**</span>
+<span class="hl lin">   78 </span><span class="hl com">	 * Internal function for checking inputs for all elements of class </span>
+<span class="hl lin">   79 </span><span class="hl com">	 * strct-name-value-checked whose value matches the object&apos;s value. </span>
+<span class="hl lin">   80 </span><span class="hl com">	 * If the object is null, all elements are unchecked.</span>
+<span class="hl lin">   81 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">   82 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">   83 </span><span class="hl com">	 * &#64;param {String} strct - The name of the structure that we&apos;re </span>
+<span class="hl lin">   84 </span><span class="hl com">	 * filling in.</span>
+<span class="hl lin">   85 </span><span class="hl com">	 * &#64;param {String} name - The name of the field.</span>
+<span class="hl lin">   86 </span><span class="hl com">	 * &#64;param {Number|String|null} obj - The data itself.</span>
+<span class="hl lin">   87 </span><span class="hl com">	 * &#64;param {Boolean} inc - Whether to include the root element in </span>
+<span class="hl lin">   88 </span><span class="hl com">	 * looking for elements to fill.</span>
+<span class="hl lin">   89 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">   90 </span><span class="hl com">	 * &#64;function _fillValueChecked</span>
+<span class="hl lin">   91 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">   92 </span><span class="hl com">	 */</span>
+<span class="hl lin">   93 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_fillValueChecked</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> val<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">   94 </span>	<span class="hl opt">{</span>
+<span class="hl lin">   95 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">   96 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">   97 </span>		<span class="hl kwa">var</span> valstr<span class="hl opt">;</span>
+<span class="hl lin">   98 </span>		fname <span class="hl opt">+=</span> <span class="hl str">&apos;-value-checked&apos;</span><span class="hl opt">;</span>
+<span class="hl lin">   99 </span>		valstr <span class="hl opt">=</span> <span class="hl kwa">null</span> <span class="hl opt">===</span> val <span class="hl opt">?</span> <span class="hl kwa">null</span> <span class="hl opt">:</span> 
+<span class="hl lin">  100 </span>			<span class="hl opt">(</span><span class="hl str">&quot;number&quot;</span> <span class="hl opt">===</span> <span class="hl kwa">typeof</span> val <span class="hl opt">?</span> val<span class="hl opt">.</span><span class="hl kwd">toString</span><span class="hl opt">() :</span> val<span class="hl opt">);</span>
+<span class="hl lin">  101 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  102 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  103 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span>valstr <span class="hl opt">===</span> <span class="hl kwa">null</span><span class="hl opt">)</span>
+<span class="hl lin">  104 </span>				<span class="hl kwd">_rattr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  105 </span>			<span class="hl kwa">else if</span> <span class="hl opt">(</span>valstr <span class="hl opt">=== (</span>list<span class="hl opt">[</span>i<span class="hl opt">]).</span>value<span class="hl opt">)</span>
+<span class="hl lin">  106 </span>				<span class="hl kwd">_attr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;true&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  107 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  108 </span>				<span class="hl kwd">_rattr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  109 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  110 </span>
+<span class="hl lin">  111 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  112 </span><span class="hl com">	 * Internal function that takes all &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; </span>
+<span class="hl lin">  113 </span><span class="hl com">	 * elements in the root and sets or unsets their </span>
+<span class="hl lin">  114 </span><span class="hl com">	 * &lt;code&gt;selected&lt;/code&gt; status depending upon whether it matches the </span>
+<span class="hl lin">  115 </span><span class="hl com">	 * object&apos;s value.</span>
+<span class="hl lin">  116 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">  117 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">  118 </span><span class="hl com">	 * &#64;param {Number|String} val - The object&apos;s value.</span>
+<span class="hl lin">  119 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">  120 </span><span class="hl com">	 * &#64;function _fillValueSelect</span>
+<span class="hl lin">  121 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">  122 </span><span class="hl com">	 */</span>
+<span class="hl lin">  123 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_fillValueSelect</span><span class="hl opt">(</span>e<span class="hl opt">,</span> val<span class="hl opt">)</span>
+<span class="hl lin">  124 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  125 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  126 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  127 </span>		<span class="hl kwa">var</span> v<span class="hl opt">;</span>
+<span class="hl lin">  128 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  129 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  130 </span>		list <span class="hl opt">=</span> e<span class="hl opt">.</span><span class="hl kwd">getElementsByTagName</span><span class="hl opt">(</span><span class="hl str">&apos;option&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  131 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++) {</span>
+<span class="hl lin">  132 </span>			v <span class="hl opt">=</span> <span class="hl str">&apos;number&apos;</span> <span class="hl opt">===</span> <span class="hl kwa">typeof</span> val <span class="hl opt">?</span> 
+<span class="hl lin">  133 </span>			     <span class="hl kwd">parseInt</span><span class="hl opt">((</span>list<span class="hl opt">[</span>i<span class="hl opt">]).</span>value<span class="hl opt">) :</span>
+<span class="hl lin">  134 </span>			     <span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">]).</span>value<span class="hl opt">;</span>
+<span class="hl lin">  135 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span>val <span class="hl opt">===</span> v<span class="hl opt">)</span>
+<span class="hl lin">  136 </span>				<span class="hl kwd">_attr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;selected&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;true&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  137 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  138 </span>				<span class="hl kwd">_rattr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;selected&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  139 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  140 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  141 </span>
+<span class="hl lin">  142 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_attrcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> attr<span class="hl opt">,</span> name<span class="hl opt">,</span> text<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  143 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  144 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  145 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  146 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  147 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  148 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  149 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  150 </span>			<span class="hl kwd">_attr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> attr<span class="hl opt">,</span> text<span class="hl opt">);</span>
+<span class="hl lin">  151 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  152 </span>
+<span class="hl lin">  153 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> cls<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  154 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  155 </span>		<span class="hl kwa">var</span> a<span class="hl opt">;</span>
+<span class="hl lin">  156 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  157 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  158 </span>		a <span class="hl opt">= [];</span>
+<span class="hl lin">  159 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  160 </span>			<span class="hl kwa">return</span> a<span class="hl opt">;</span>
+<span class="hl lin">  161 </span>		list <span class="hl opt">=</span> e<span class="hl opt">.</span><span class="hl kwd">getElementsByClassName</span><span class="hl opt">(</span>cls<span class="hl opt">);</span>
+<span class="hl lin">  162 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  163 </span>			a<span class="hl opt">.</span><span class="hl kwd">push</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">]);</span>
+<span class="hl lin">  164 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span>inc <span class="hl opt">&amp;&amp;</span> e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">contains</span><span class="hl opt">(</span>cls<span class="hl opt">))</span>
+<span class="hl lin">  165 </span>			a<span class="hl opt">.</span><span class="hl kwd">push</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  166 </span>		<span class="hl kwa">return</span> a<span class="hl opt">;</span>
+<span class="hl lin">  167 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  168 </span>
+<span class="hl lin">  169 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_repl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> text<span class="hl opt">)</span>
+<span class="hl lin">  170 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  171 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  172 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  173 </span>		<span class="hl kwa">while</span> <span class="hl opt">(</span>e<span class="hl opt">.</span>firstChild<span class="hl opt">)</span>
+<span class="hl lin">  174 </span>			e<span class="hl opt">.</span><span class="hl kwd">removeChild</span><span class="hl opt">(</span>e<span class="hl opt">.</span>firstChild<span class="hl opt">);</span>
+<span class="hl lin">  175 </span>		e<span class="hl opt">.</span><span class="hl kwd">appendChild</span><span class="hl opt">(</span>document<span class="hl opt">.</span><span class="hl kwd">createTextNode</span><span class="hl opt">(</span>text<span class="hl opt">));</span>
+<span class="hl lin">  176 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  177 </span>
+<span class="hl lin">  178 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  179 </span><span class="hl com">	 * Internal function for filling in ISO-8601 dates.</span>
+<span class="hl lin">  180 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">  181 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">  182 </span><span class="hl com">	 * &#64;param {String} strct - The name of the structure that we&apos;re </span>
+<span class="hl lin">  183 </span><span class="hl com">	 * filling in.</span>
+<span class="hl lin">  184 </span><span class="hl com">	 * &#64;param {String} name - The name of the field.</span>
+<span class="hl lin">  185 </span><span class="hl com">	 * &#64;param {Number|null} obj - The data itself.</span>
+<span class="hl lin">  186 </span><span class="hl com">	 * &#64;param {Boolean} inc - Whether to include the root element in </span>
+<span class="hl lin">  187 </span><span class="hl com">	 * looking for elements to fill.</span>
+<span class="hl lin">  188 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">  189 </span><span class="hl com">	 * &#64;function _fillDateValue</span>
+<span class="hl lin">  190 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">  191 </span><span class="hl com">	 */</span>
+<span class="hl lin">  192 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_fillDateValue</span><span class="hl opt">(</span>e<span class="hl opt">,</span> strct<span class="hl opt">,</span> name<span class="hl opt">,</span> val<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  193 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  194 </span>		<span class="hl kwa">var</span> fname<span class="hl opt">;</span>
+<span class="hl lin">  195 </span>		<span class="hl kwa">var</span> year<span class="hl opt">;</span>
+<span class="hl lin">  196 </span>		<span class="hl kwa">var</span> mo<span class="hl opt">;</span>
+<span class="hl lin">  197 </span>		<span class="hl kwa">var</span> day<span class="hl opt">;</span>
+<span class="hl lin">  198 </span>		<span class="hl kwa">var</span> full<span class="hl opt">;</span>
+<span class="hl lin">  199 </span>		<span class="hl kwa">var</span> d<span class="hl opt">;</span>
+<span class="hl lin">  200 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> val<span class="hl opt">)</span>
+<span class="hl lin">  201 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  202 </span>		d <span class="hl opt">=</span> <span class="hl kwa">new</span> <span class="hl kwd">Date</span><span class="hl opt">();</span>
+<span class="hl lin">  203 </span>		d<span class="hl opt">.</span><span class="hl kwd">setTime</span><span class="hl opt">(</span>val <span class="hl opt">*</span> <span class="hl num">1000</span><span class="hl opt">);</span>
+<span class="hl lin">  204 </span>		year <span class="hl opt">=</span> d<span class="hl opt">.</span><span class="hl kwd">getFullYear</span><span class="hl opt">();</span>
+<span class="hl lin">  205 </span>		mo <span class="hl opt">=</span> d<span class="hl opt">.</span><span class="hl kwd">getMonth</span><span class="hl opt">() +</span> <span class="hl num">1</span><span class="hl opt">;</span>
+<span class="hl lin">  206 </span>		day <span class="hl opt">=</span> d<span class="hl opt">.</span><span class="hl kwd">getDate</span><span class="hl opt">();</span>
+<span class="hl lin">  207 </span>		full <span class="hl opt">=</span> year <span class="hl opt">+</span> <span class="hl str">&apos;-&apos;</span> <span class="hl opt">+</span>
+<span class="hl lin">  208 </span>			<span class="hl opt">(</span>mo <span class="hl opt">&lt;</span> <span class="hl num">10</span> <span class="hl opt">?</span> <span class="hl str">&apos;0&apos;</span> <span class="hl opt">:</span> <span class="hl str">&apos;&apos;</span><span class="hl opt">) +</span> mo <span class="hl opt">+</span> <span class="hl str">&apos;-&apos;</span> <span class="hl opt">+</span>
+<span class="hl lin">  209 </span>			<span class="hl opt">(</span>day <span class="hl opt">&lt;</span> <span class="hl num">10</span> <span class="hl opt">?</span> <span class="hl str">&apos;0&apos;</span> <span class="hl opt">:</span> <span class="hl str">&apos;&apos;</span><span class="hl opt">) +</span> day<span class="hl opt">;</span>
+<span class="hl lin">  210 </span>		fname <span class="hl opt">=</span> strct <span class="hl opt">+</span> <span class="hl str">&apos;-&apos;</span> <span class="hl opt">+</span> name <span class="hl opt">+</span> <span class="hl str">&apos;-date-value&apos;</span><span class="hl opt">;</span>
+<span class="hl lin">  211 </span>		<span class="hl kwd">_attrcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;value&apos;</span><span class="hl opt">,</span> fname<span class="hl opt">,</span> full<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  212 </span>		fname <span class="hl opt">=</span> strct <span class="hl opt">+</span> <span class="hl str">&apos;-&apos;</span> <span class="hl opt">+</span> name <span class="hl opt">+</span> <span class="hl str">&apos;-date-text&apos;</span><span class="hl opt">;</span>
+<span class="hl lin">  213 </span>		<span class="hl kwd">_replcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> full<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  214 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  215 </span>
+<span class="hl lin">  216 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  217 </span><span class="hl com">	 * Internal function for checking inputs for all elements of class </span>
+<span class="hl lin">  218 </span><span class="hl com">	 * strct-name-bits-checked whose value is the bit-wise AND of the </span>
+<span class="hl lin">  219 </span><span class="hl com">	 * object&apos;s value. If the object is null, all elements are unchecked.</span>
+<span class="hl lin">  220 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">  221 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">  222 </span><span class="hl com">	 * &#64;param {String} strct - The name of the structure that we&apos;re </span>
+<span class="hl lin">  223 </span><span class="hl com">	 * filling in.</span>
+<span class="hl lin">  224 </span><span class="hl com">	 * &#64;param {String} name - The name of the field.</span>
+<span class="hl lin">  225 </span><span class="hl com">	 * &#64;param {Number|null} obj - The data itself.</span>
+<span class="hl lin">  226 </span><span class="hl com">	 * &#64;param {Boolean} inc - Whether to include the root element in </span>
+<span class="hl lin">  227 </span><span class="hl com">	 * looking for elements to fill.</span>
+<span class="hl lin">  228 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">  229 </span><span class="hl com">	 * &#64;function _fillBitsChecked</span>
+<span class="hl lin">  230 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">  231 </span><span class="hl com">	 */</span>
+<span class="hl lin">  232 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_fillBitsChecked</span><span class="hl opt">(</span>e<span class="hl opt">,</span> strct<span class="hl opt">,</span> name<span class="hl opt">,</span> val<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  233 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  234 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  235 </span>		<span class="hl kwa">var</span> fname<span class="hl opt">;</span>
+<span class="hl lin">  236 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  237 </span>		<span class="hl kwa">var</span> v<span class="hl opt">;</span>
+<span class="hl lin">  238 </span>		fname <span class="hl opt">=</span> strct <span class="hl opt">+</span> <span class="hl str">&apos;-&apos;</span> <span class="hl opt">+</span> name <span class="hl opt">+</span> <span class="hl str">&apos;-bits-checked&apos;</span><span class="hl opt">;</span>
+<span class="hl lin">  239 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  240 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++) {</span>
+<span class="hl lin">  241 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span>val <span class="hl opt">===</span> <span class="hl kwa">null</span><span class="hl opt">) {</span>
+<span class="hl lin">  242 </span>				<span class="hl kwd">_rattr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  243 </span>				<span class="hl kwa">continue</span><span class="hl opt">;</span>
+<span class="hl lin">  244 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  245 </span>			v <span class="hl opt">=</span> <span class="hl kwd">parseInt</span><span class="hl opt">((</span>list<span class="hl opt">[</span>i<span class="hl opt">]).</span>value<span class="hl opt">);</span>
+<span class="hl lin">  246 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">isNaN</span><span class="hl opt">(</span>v<span class="hl opt">))</span>
+<span class="hl lin">  247 </span>				<span class="hl kwd">_rattr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  248 </span>			<span class="hl kwa">else if</span> <span class="hl opt">(</span><span class="hl num">0</span> <span class="hl opt">===</span> v <span class="hl opt">&amp;&amp;</span> <span class="hl num">0</span> <span class="hl opt">===</span> val<span class="hl opt">)</span>
+<span class="hl lin">  249 </span>				<span class="hl kwd">_attr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;true&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  250 </span>			<span class="hl kwa">else if</span> <span class="hl opt">((</span><span class="hl num">1</span> <span class="hl opt">&lt;&lt; (</span>v <span class="hl opt">-</span> <span class="hl num">1</span><span class="hl opt">)) &amp;</span> val<span class="hl opt">)</span>
+<span class="hl lin">  251 </span>				<span class="hl kwd">_attr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;true&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  252 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  253 </span>				<span class="hl kwd">_rattr</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl str">&apos;checked&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  254 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  255 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  256 </span>
+<span class="hl lin">  257 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  258 </span><span class="hl com">	 * Internal function for filling a structure field.</span>
+<span class="hl lin">  259 </span><span class="hl com">	 * This first does the has/no class setting for null values, then </span>
+<span class="hl lin">  260 </span><span class="hl com">	 * optionally returns if null (running the custom fields first), </span>
+<span class="hl lin">  261 </span><span class="hl com">	 * otherwise the generic text/value/etc fields, then finally the </span>
+<span class="hl lin">  262 </span><span class="hl com">	 * custom fields.</span>
+<span class="hl lin">  263 </span><span class="hl com">	 * &#64;param {HTMLElement} e - The root of the DOM tree in which we </span>
+<span class="hl lin">  264 </span><span class="hl com">	 * query for elements to fill into.</span>
+<span class="hl lin">  265 </span><span class="hl com">	 * &#64;param {String} strct - The name of the structure that we&apos;re </span>
+<span class="hl lin">  266 </span><span class="hl com">	 * filling in.</span>
+<span class="hl lin">  267 </span><span class="hl com">	 * &#64;param {String} name - The name of the field.</span>
+<span class="hl lin">  268 </span><span class="hl com">	 * &#64;param {ort.DataCallbacks|null} custom - Custom callback functions </span>
+<span class="hl lin">  269 </span><span class="hl com">	 * to invoke on the field.</span>
+<span class="hl lin">  270 </span><span class="hl com">	 * &#64;param obj - The data itself, which is either a native type or one </span>
+<span class="hl lin">  271 </span><span class="hl com">	 * of the data interfaces for an application-specific type.</span>
+<span class="hl lin">  272 </span><span class="hl com">	 * &#64;param {Boolean} inc - Whether to include the root element in </span>
+<span class="hl lin">  273 </span><span class="hl com">	 * looking for elements to fill. Note that nested structures are </span>
+<span class="hl lin">  274 </span><span class="hl com">	 * alwyas filled non-inclusively.</span>
+<span class="hl lin">  275 </span><span class="hl com">	 * &#64;param {Boolean} cannull - Whether the data object might be null.</span>
+<span class="hl lin">  276 </span><span class="hl com">	 * &#64;param {Boolean} isblob - Whether the data object is a blob.</span>
+<span class="hl lin">  277 </span><span class="hl com">	 * &#64;param sub - If the data object is a nested structure interface, </span>
+<span class="hl lin">  278 </span><span class="hl com">	 * this is the allocated class of that interface.</span>
+<span class="hl lin">  279 </span><span class="hl com">	 * &#64;private</span>
+<span class="hl lin">  280 </span><span class="hl com">	 * &#64;function _fillField</span>
+<span class="hl lin">  281 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">  282 </span><span class="hl com">	 */</span>
+<span class="hl lin">  283 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> strct<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">,</span> obj<span class="hl opt">,</span> inc<span class="hl opt">,</span> cannull<span class="hl opt">,</span> isblob<span class="hl opt">,</span> sub<span class="hl opt">)</span>
+<span class="hl lin">  284 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  285 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  286 </span>		<span class="hl kwa">var</span> fname<span class="hl opt">;</span>
+<span class="hl lin">  287 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  288 </span>		fname <span class="hl opt">=</span> strct <span class="hl opt">+</span> <span class="hl str">&apos;-&apos;</span> <span class="hl opt">+</span> name<span class="hl opt">;</span>
+<span class="hl lin">  289 </span>		<span class="hl com">/* First handle our has/no null situation. */</span>
+<span class="hl lin">  290 </span><span class="hl com">		if (cannull) {</span>
+<span class="hl lin">  291 </span><span class="hl com">			if (null === obj) {</span>
+<span class="hl lin">  292 </span><span class="hl com">				_hidecl(e, strct + &apos;-has-&apos; + name, inc);</span>
+<span class="hl lin">  293 </span><span class="hl com">				_showcl(e, strct + &apos;-no-&apos; + name, inc);</span>
+<span class="hl lin">  294 </span><span class="hl com">			} else {</span>
+<span class="hl lin">  295 </span><span class="hl com">				_showcl(e, strct + &apos;-has-&apos; + name, inc);</span>
+<span class="hl lin">  296 </span><span class="hl com">				_hidecl(e, strct + &apos;-no-&apos; + name, inc);</span>
+<span class="hl lin">  297 </span><span class="hl com">			}</span>
+<span class="hl lin">  298 </span><span class="hl com">		}</span>
+<span class="hl lin">  299 </span><span class="hl com">		/* Don&apos;t process null values that can be null. */</span>
+<span class="hl lin">  300 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span>cannull <span class="hl opt">&amp;&amp;</span> <span class="hl kwa">null</span> <span class="hl opt">===</span> obj<span class="hl opt">) {</span>
+<span class="hl lin">  301 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> custom <span class="hl opt">&amp;&amp;</span> fname <span class="hl kwa">in</span> custom<span class="hl opt">) {</span>
+<span class="hl lin">  302 </span>				<span class="hl kwa">if</span> <span class="hl opt">(</span>custom<span class="hl opt">[</span>fname<span class="hl opt">]</span> <span class="hl kwa">instanceof</span> Array<span class="hl opt">) {</span>
+<span class="hl lin">  303 </span>					<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> custom<span class="hl opt">[</span>fname<span class="hl opt">].</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  304 </span>						custom<span class="hl opt">[</span>fname<span class="hl opt">][</span>i<span class="hl opt">](</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  305 </span>				<span class="hl opt">}</span> <span class="hl kwa">else</span> <span class="hl opt">{</span>
+<span class="hl lin">  306 </span>					custom<span class="hl opt">[</span>fname<span class="hl opt">](</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  307 </span>				<span class="hl opt">}</span>
+<span class="hl lin">  308 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  309 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  310 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  311 </span>		<span class="hl com">/* Non-null non-structs. */</span>
+<span class="hl lin">  312 </span>		<span class="hl com">/* Don&apos;t account for blobs. */</span>
+<span class="hl lin">  313 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> sub<span class="hl opt">) {</span>
+<span class="hl lin">  314 </span>			list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname <span class="hl opt">+</span> <span class="hl str">&apos;-obj&apos;</span><span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  315 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++) {</span>
+<span class="hl lin">  316 </span>				sub<span class="hl opt">.</span><span class="hl kwd">fillInner</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  317 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  318 </span>		<span class="hl opt">}</span> <span class="hl kwa">else if</span> <span class="hl opt">( !</span> isblob<span class="hl opt">) {</span>
+<span class="hl lin">  319 </span>			list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname <span class="hl opt">+</span> <span class="hl str">&apos;-enum-select&apos;</span><span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  320 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++) {</span>
+<span class="hl lin">  321 </span>				<span class="hl kwd">_fillValueSelect</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> obj<span class="hl opt">);</span>
+<span class="hl lin">  322 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  323 </span>			<span class="hl kwd">_replcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname <span class="hl opt">+</span> <span class="hl str">&apos;-text&apos;</span><span class="hl opt">,</span> obj<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  324 </span>			<span class="hl kwd">_attrcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;value&apos;</span><span class="hl opt">,</span> fname <span class="hl opt">+</span> <span class="hl str">&apos;-value&apos;</span><span class="hl opt">,</span> obj<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  325 </span>			<span class="hl kwd">_fillValueChecked</span><span class="hl opt">(</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> obj<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  326 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  327 </span>		<span class="hl com">/* Lastly, handle the custom callback. */</span>
+<span class="hl lin">  328 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> custom <span class="hl opt">&amp;&amp;</span> fname <span class="hl kwa">in</span> custom<span class="hl opt">) {</span>
+<span class="hl lin">  329 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span>custom<span class="hl opt">[</span>fname<span class="hl opt">]</span> <span class="hl kwa">instanceof</span> Array<span class="hl opt">) {</span>
+<span class="hl lin">  330 </span>				<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> custom<span class="hl opt">[</span>fname<span class="hl opt">].</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  331 </span>					custom<span class="hl opt">[</span>fname<span class="hl opt">][</span>i<span class="hl opt">](</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> obj<span class="hl opt">);</span>
+<span class="hl lin">  332 </span>			<span class="hl opt">}</span> <span class="hl kwa">else</span> <span class="hl opt">{</span>
+<span class="hl lin">  333 </span>				custom<span class="hl opt">[</span>fname<span class="hl opt">](</span>e<span class="hl opt">,</span> fname<span class="hl opt">,</span> obj<span class="hl opt">);</span>
+<span class="hl lin">  334 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  335 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  336 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  337 </span>
+<span class="hl lin">  338 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_replcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> text<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  339 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  340 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  341 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  342 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  343 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  344 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  345 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  346 </span>			<span class="hl kwd">_repl</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> text<span class="hl opt">);</span>
+<span class="hl lin">  347 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  348 </span>
+<span class="hl lin">  349 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_classadd</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">)</span>
+<span class="hl lin">  350 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  351 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  352 </span>			<span class="hl kwa">return</span><span class="hl opt">(</span><span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  353 </span>		<span class="hl kwa">if</span> <span class="hl opt">( !</span> e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">contains</span><span class="hl opt">(</span>name<span class="hl opt">))</span>
+<span class="hl lin">  354 </span>			e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">add</span><span class="hl opt">(</span>name<span class="hl opt">);</span>
+<span class="hl lin">  355 </span>		<span class="hl kwa">return</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  356 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  357 </span>
+<span class="hl lin">  358 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_classaddcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> cls<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  359 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  360 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  361 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  362 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  363 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  364 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  365 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  366 </span>			<span class="hl kwd">_classadd</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> cls<span class="hl opt">);</span>
+<span class="hl lin">  367 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  368 </span>
+<span class="hl lin">  369 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">)</span>
+<span class="hl lin">  370 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  371 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  372 </span>			<span class="hl kwa">return null</span><span class="hl opt">;</span>
+<span class="hl lin">  373 </span>		<span class="hl kwa">if</span> <span class="hl opt">( !</span> e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">contains</span><span class="hl opt">(</span><span class="hl str">&apos;hide&apos;</span><span class="hl opt">))</span>
+<span class="hl lin">  374 </span>			e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">add</span><span class="hl opt">(</span><span class="hl str">&apos;hide&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  375 </span>		<span class="hl kwa">return</span> e<span class="hl opt">;</span>
+<span class="hl lin">  376 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  377 </span>
+<span class="hl lin">  378 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_hidecl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  379 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  380 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  381 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  382 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  383 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  384 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  385 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  386 </span>			<span class="hl kwd">_hide</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">]);</span>
+<span class="hl lin">  387 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  388 </span>
+<span class="hl lin">  389 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_show</span><span class="hl opt">(</span>e<span class="hl opt">)</span>
+<span class="hl lin">  390 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  391 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  392 </span>			<span class="hl kwa">return null</span><span class="hl opt">;</span>
+<span class="hl lin">  393 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span>e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">contains</span><span class="hl opt">(</span><span class="hl str">&apos;hide&apos;</span><span class="hl opt">))</span>
+<span class="hl lin">  394 </span>			e<span class="hl opt">.</span>classList<span class="hl opt">.</span><span class="hl kwd">remove</span><span class="hl opt">(</span><span class="hl str">&apos;hide&apos;</span><span class="hl opt">);</span>
+<span class="hl lin">  395 </span>		<span class="hl kwa">return</span> e<span class="hl opt">;</span>
+<span class="hl lin">  396 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  397 </span>
+<span class="hl lin">  398 </span>	<span class="hl kwa">function</span> <span class="hl kwd">_showcl</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">)</span>
+<span class="hl lin">  399 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  400 </span>		<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  401 </span>		<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  402 </span>		<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  403 </span>			<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  404 </span>		list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  405 </span>		<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  406 </span>			<span class="hl kwd">_show</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">]);</span>
+<span class="hl lin">  407 </span>	<span class="hl opt">}</span>
+<span class="hl lin">  408 </span>
+<span class="hl lin">  409 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  410 </span><span class="hl com">	 * All possible callback functions for passing to the &quot;custom&quot; </span>
+<span class="hl lin">  411 </span><span class="hl com">	 * associative array when filling in DOM trees.</span>
+<span class="hl lin">  412 </span><span class="hl com">	 * &#64;interface ort.DataCallbacks</span>
+<span class="hl lin">  413 </span><span class="hl com">	 */</span>
+<span class="hl lin">  414 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  415 </span><span class="hl com">	 * </span>
+<span class="hl lin">  416 </span><span class="hl com">	 * A user within our system.&lt;br/&gt;</span>
+<span class="hl lin">  417 </span><span class="hl com">	 * </span>
+<span class="hl lin">  418 </span><span class="hl com">	 * &#64;interface ort.userData</span>
+<span class="hl lin">  419 </span><span class="hl com">	 */</span>
+<span class="hl lin">  420 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  421 </span><span class="hl com">	 * </span>
+<span class="hl lin">  422 </span><span class="hl com">	 * A logged-in user.&lt;br/&gt;</span>
+<span class="hl lin">  423 </span><span class="hl com">	 * </span>
+<span class="hl lin">  424 </span><span class="hl com">	 * &#64;interface ort.sessData</span>
+<span class="hl lin">  425 </span><span class="hl com">	 */</span>
+<span class="hl lin">  426 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  427 </span><span class="hl com">	 * Accepts {&#64;link ort.userData} for writing into a DOM tree.</span>
+<span class="hl lin">  428 </span><span class="hl com">	 * &#64;param {(ort.userData|ort.userData[])} obj - The object(s) to </span>
+<span class="hl lin">  429 </span><span class="hl com">	 * write.</span>
+<span class="hl lin">  430 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">  431 </span><span class="hl com">	 * &#64;constructor</span>
+<span class="hl lin">  432 </span><span class="hl com">	 * &#64;class</span>
+<span class="hl lin">  433 </span><span class="hl com">	 */</span>
+<span class="hl lin">  434 </span>	<span class="hl kwa">var</span> user <span class="hl opt">= (</span><span class="hl kwa">function</span><span class="hl opt">()</span>
+<span class="hl lin">  435 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  436 </span>		<span class="hl kwa">function</span> <span class="hl kwd">user</span><span class="hl opt">(</span>o<span class="hl opt">)</span>
+<span class="hl lin">  437 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  438 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span>obj <span class="hl opt">=</span> o<span class="hl opt">;</span>
+<span class="hl lin">  439 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  440 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  441 </span><span class="hl com">		 * Write the {&#64;link ort.userData} into the given HTMLElement in </span>
+<span class="hl lin">  442 </span><span class="hl com">		 * the DOM tree.</span>
+<span class="hl lin">  443 </span><span class="hl com">		 * If constructed with an array, the first element is used.</span>
+<span class="hl lin">  444 </span><span class="hl com">		 * Elements within (and including) &quot;e&quot; having the following </span>
+<span class="hl lin">  445 </span><span class="hl com">		 * classes are manipulated as follows:</span>
+<span class="hl lin">  446 </span><span class="hl com">		 * &lt;ul&gt;</span>
+<span class="hl lin">  447 </span><span class="hl com">		 * &lt;li&gt;user-email-enum-select: sets the &lt;code&gt;select&lt;/code&gt; </span>
+<span class="hl lin">  448 </span><span class="hl com">		 * attribute for &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; values matching </span>
+<span class="hl lin">  449 </span><span class="hl com">		 * &lt;i&gt;email&lt;/i&gt; under the element&lt;/li&gt;</span>
+<span class="hl lin">  450 </span><span class="hl com">		 * &lt;li&gt;user-email-value-checked: sets the &lt;code&gt;checked&lt;/code&gt; </span>
+<span class="hl lin">  451 </span><span class="hl com">		 * attribute under the element matching the input&lt;/li&gt;</span>
+<span class="hl lin">  452 </span><span class="hl com">		 * &lt;li&gt;user-email-text: replace contents with &lt;i&gt;email&lt;/i&gt; </span>
+<span class="hl lin">  453 </span><span class="hl com">		 * data&lt;/li&gt;</span>
+<span class="hl lin">  454 </span><span class="hl com">		 * &lt;li&gt;user-email-value: replace &lt;code&gt;value&lt;/code&gt; attribute </span>
+<span class="hl lin">  455 </span><span class="hl com">		 * with &lt;i&gt;email&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  456 </span><span class="hl com">		 * &lt;li&gt;user-hash-enum-select: sets the &lt;code&gt;select&lt;/code&gt; </span>
+<span class="hl lin">  457 </span><span class="hl com">		 * attribute for &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; values matching </span>
+<span class="hl lin">  458 </span><span class="hl com">		 * &lt;i&gt;hash&lt;/i&gt; under the element&lt;/li&gt;</span>
+<span class="hl lin">  459 </span><span class="hl com">		 * &lt;li&gt;user-hash-value-checked: sets the &lt;code&gt;checked&lt;/code&gt; </span>
+<span class="hl lin">  460 </span><span class="hl com">		 * attribute under the element matching the input&lt;/li&gt;</span>
+<span class="hl lin">  461 </span><span class="hl com">		 * &lt;li&gt;user-hash-text: replace contents with &lt;i&gt;hash&lt;/i&gt; </span>
+<span class="hl lin">  462 </span><span class="hl com">		 * data&lt;/li&gt;</span>
+<span class="hl lin">  463 </span><span class="hl com">		 * &lt;li&gt;user-hash-value: replace &lt;code&gt;value&lt;/code&gt; attribute with </span>
+<span class="hl lin">  464 </span><span class="hl com">		 * &lt;i&gt;hash&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  465 </span><span class="hl com">		 * &lt;li&gt;user-id-enum-select: sets the &lt;code&gt;select&lt;/code&gt; </span>
+<span class="hl lin">  466 </span><span class="hl com">		 * attribute for &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; values matching </span>
+<span class="hl lin">  467 </span><span class="hl com">		 * &lt;i&gt;id&lt;/i&gt; under the element&lt;/li&gt;</span>
+<span class="hl lin">  468 </span><span class="hl com">		 * &lt;li&gt;user-id-value-checked: sets the &lt;code&gt;checked&lt;/code&gt; </span>
+<span class="hl lin">  469 </span><span class="hl com">		 * attribute under the element matching the input&lt;/li&gt;</span>
+<span class="hl lin">  470 </span><span class="hl com">		 * &lt;li&gt;user-id-text: replace contents with &lt;i&gt;id&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  471 </span><span class="hl com">		 * &lt;li&gt;user-id-value: replace &lt;code&gt;value&lt;/code&gt; attribute with </span>
+<span class="hl lin">  472 </span><span class="hl com">		 * &lt;i&gt;id&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  473 </span><span class="hl com">		 * &lt;/ul&gt;</span>
+<span class="hl lin">  474 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  475 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional dictionary of </span>
+<span class="hl lin">  476 </span><span class="hl com">		 * functions keyed by structure and field name (e.g., &lt;i&gt;foo&lt;/i&gt; </span>
+<span class="hl lin">  477 </span><span class="hl com">		 * structure, &lt;i&gt;bar&lt;/i&gt; field would be &lt;code&gt;foo-bar&lt;/code&gt;). </span>
+<span class="hl lin">  478 </span><span class="hl com">		 * The value is a function for custom handling that accepts the </span>
+<span class="hl lin">  479 </span><span class="hl com">		 * &quot;e&quot; value, the name of the structure-field, and the value of </span>
+<span class="hl lin">  480 </span><span class="hl com">		 * the structure and field.</span>
+<span class="hl lin">  481 </span><span class="hl com">		 * You may also specify an array of functions instead of a </span>
+<span class="hl lin">  482 </span><span class="hl com">		 * singleton.</span>
+<span class="hl lin">  483 </span><span class="hl com">		 * These callbacks are invoked &lt;b&gt;after&lt;/b&gt; the generic classes </span>
+<span class="hl lin">  484 </span><span class="hl com">		 * are filled.</span>
+<span class="hl lin">  485 </span><span class="hl com">		 * &#64;function fill</span>
+<span class="hl lin">  486 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  487 </span><span class="hl com">		 */</span>
+<span class="hl lin">  488 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fill</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  489 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  490 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">,</span> <span class="hl kwa">true</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  491 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  492 </span>
+<span class="hl lin">  493 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  494 </span><span class="hl com">		 * Like {&#64;link ort.user#fill} but instead of accepting a single </span>
+<span class="hl lin">  495 </span><span class="hl com">		 * element to fill, filling into all elements (non-inclusive) </span>
+<span class="hl lin">  496 </span><span class="hl com">		 * matching the given class name beneath (non-inclusive) the </span>
+<span class="hl lin">  497 </span><span class="hl com">		 * given root.</span>
+<span class="hl lin">  498 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  499 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  500 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  501 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  502 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill} for details).</span>
+<span class="hl lin">  503 </span><span class="hl com">		 * &#64;function fillByClass</span>
+<span class="hl lin">  504 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  505 </span><span class="hl com">		 */</span>
+<span class="hl lin">  506 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  507 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  508 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fillByClass</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwa">true</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  509 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  510 </span>
+<span class="hl lin">  511 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  512 </span><span class="hl com">		 * Like {&#64;link ort.user#fillByClass} but inclusive the root and </span>
+<span class="hl lin">  513 </span><span class="hl com">		 * targets by class.</span>
+<span class="hl lin">  514 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  515 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  516 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  517 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  518 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill} for details).</span>
+<span class="hl lin">  519 </span><span class="hl com">		 * &#64;function fillInnerByClass</span>
+<span class="hl lin">  520 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  521 </span><span class="hl com">		 */</span>
+<span class="hl lin">  522 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillInnerByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  523 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  524 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fillByClass</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  525 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  526 </span>
+<span class="hl lin">  527 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  528 </span><span class="hl com">		 * Like {&#64;link ort.user#fill} but not including the root element </span>
+<span class="hl lin">  529 </span><span class="hl com">		 * &quot;e&quot;.</span>
+<span class="hl lin">  530 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  531 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  532 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill} for details).</span>
+<span class="hl lin">  533 </span><span class="hl com">		 * &#64;function fillInner</span>
+<span class="hl lin">  534 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  535 </span><span class="hl com">		 */</span>
+<span class="hl lin">  536 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillInner</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  537 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  538 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  539 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  540 </span>
+<span class="hl lin">  541 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  542 </span><span class="hl com">		 * Implements all {&#64;link ort.user#fill} functions.</span>
+<span class="hl lin">  543 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  544 </span><span class="hl com">		 * &#64;param {ort.userData|ort.userData[]|null} o - The object (or </span>
+<span class="hl lin">  545 </span><span class="hl com">		 * array) to fill.</span>
+<span class="hl lin">  546 </span><span class="hl com">		 * &#64;param {Boolean} inc - Whether to include the root or not when </span>
+<span class="hl lin">  547 </span><span class="hl com">		 * processing.</span>
+<span class="hl lin">  548 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  549 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill}).</span>
+<span class="hl lin">  550 </span><span class="hl com">		 * &#64;private</span>
+<span class="hl lin">  551 </span><span class="hl com">		 * &#64;function _fill</span>
+<span class="hl lin">  552 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  553 </span><span class="hl com">		 */</span>
+<span class="hl lin">  554 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">_fill</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> o<span class="hl opt">,</span> inc<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  555 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  556 </span>			<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  557 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> o <span class="hl opt">||</span> <span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  558 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  559 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span>o <span class="hl kwa">instanceof</span> Array<span class="hl opt">) {</span>
+<span class="hl lin">  560 </span>				<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl num">0</span> <span class="hl opt">===</span> o<span class="hl opt">.</span>length<span class="hl opt">)</span>
+<span class="hl lin">  561 </span>					<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  562 </span>				o <span class="hl opt">=</span> o<span class="hl opt">[</span><span class="hl num">0</span><span class="hl opt">];</span>
+<span class="hl lin">  563 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  564 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">typeof</span> custom <span class="hl opt">===</span> <span class="hl str">&apos;undefined&apos;</span><span class="hl opt">)</span>
+<span class="hl lin">  565 </span>				custom <span class="hl opt">=</span> <span class="hl kwa">null</span><span class="hl opt">;</span>
+<span class="hl lin">  566 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;user&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;email&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>email<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  567 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;user&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;hash&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>hash<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  568 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;user&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;id&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>id<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  569 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> custom <span class="hl opt">&amp;&amp;</span> <span class="hl str">&apos;user&apos;</span> <span class="hl kwa">in</span> custom<span class="hl opt">) {</span>
+<span class="hl lin">  570 </span>				<span class="hl kwa">if</span> <span class="hl opt">(</span>custom<span class="hl opt">[</span><span class="hl str">&apos;user&apos;</span><span class="hl opt">]</span> <span class="hl kwa">instanceof</span> Array<span class="hl opt">) {</span>
+<span class="hl lin">  571 </span>					<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> custom<span class="hl opt">[</span><span class="hl str">&apos;user&apos;</span><span class="hl opt">].</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  572 </span>						<span class="hl opt">(</span>custom<span class="hl opt">[</span><span class="hl str">&apos;user&apos;</span><span class="hl opt">])[</span>i<span class="hl opt">](</span>e<span class="hl opt">,</span> <span class="hl str">&apos;user&apos;</span><span class="hl opt">,</span> o<span class="hl opt">);</span>
+<span class="hl lin">  573 </span>				<span class="hl opt">}</span> <span class="hl kwa">else</span> <span class="hl opt">{</span>
+<span class="hl lin">  574 </span>					<span class="hl opt">(</span>custom<span class="hl opt">[</span><span class="hl str">&apos;user&apos;</span><span class="hl opt">])(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;user&apos;</span><span class="hl opt">,</span> o<span class="hl opt">);</span>
+<span class="hl lin">  575 </span>				<span class="hl opt">}</span>
+<span class="hl lin">  576 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  577 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  578 </span>
+<span class="hl lin">  579 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  580 </span><span class="hl com">		 * Like {&#64;link ort.user#_fill} but instead of accepting a single </span>
+<span class="hl lin">  581 </span><span class="hl com">		 * element to fill, filling into all elements matching the given </span>
+<span class="hl lin">  582 </span><span class="hl com">		 * class name beneath the given root.</span>
+<span class="hl lin">  583 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  584 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  585 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  586 </span><span class="hl com">		 * &#64;param {Boolean} inc - Whether to include the roots or not </span>
+<span class="hl lin">  587 </span><span class="hl com">		 * when processing.</span>
+<span class="hl lin">  588 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  589 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill} for details).</span>
+<span class="hl lin">  590 </span><span class="hl com">		 * &#64;private</span>
+<span class="hl lin">  591 </span><span class="hl com">		 * &#64;function _fillByClass</span>
+<span class="hl lin">  592 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  593 </span><span class="hl com">		 */</span>
+<span class="hl lin">  594 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">_fillByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  595 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  596 </span>			<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  597 </span>			<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  598 </span>			list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  599 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  600 </span>				<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">,</span> inc<span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  601 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  602 </span>
+<span class="hl lin">  603 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  604 </span><span class="hl com">		 * Like {&#64;link ort.user#fillArray}, but hiding an element if the </span>
+<span class="hl lin">  605 </span><span class="hl com">		 * array is empty or null.</span>
+<span class="hl lin">  606 </span><span class="hl com">		 * &#64;param {HTMLElement|null} e - The DOM element.</span>
+<span class="hl lin">  607 </span><span class="hl com">		 * &#64;param {HTMLElement|null} tohide - The DOM element to hide.</span>
+<span class="hl lin">  608 </span><span class="hl com">		 * &#64;param {ort.userData|ort.userData[]|null} o - The array (or </span>
+<span class="hl lin">  609 </span><span class="hl com">		 * object) to fill.</span>
+<span class="hl lin">  610 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  611 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill}).</span>
+<span class="hl lin">  612 </span><span class="hl com">		 * &#64;function fillArrayOrHide</span>
+<span class="hl lin">  613 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  614 </span><span class="hl com">		 */</span>
+<span class="hl lin">  615 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArrayOrHide</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> tohide<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  616 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  617 </span>			<span class="hl kwa">var</span> len<span class="hl opt">;</span>
+<span class="hl lin">  618 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">)</span>
+<span class="hl lin">  619 </span>				len <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span>
+<span class="hl lin">  620 </span>			<span class="hl kwa">else if</span> <span class="hl opt">(</span><span class="hl kwa">this</span><span class="hl opt">.</span>obj <span class="hl kwa">instanceof</span> Array<span class="hl opt">)</span>
+<span class="hl lin">  621 </span>				len <span class="hl opt">=</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">.</span>length<span class="hl opt">;</span>
+<span class="hl lin">  622 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  623 </span>				len <span class="hl opt">=</span> <span class="hl num">1</span><span class="hl opt">;</span>
+<span class="hl lin">  624 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">  625 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  626 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> tohide<span class="hl opt">)</span>
+<span class="hl lin">  627 </span>				<span class="hl kwd">_show</span><span class="hl opt">(</span>tohide<span class="hl opt">);</span>
+<span class="hl lin">  628 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  629 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> tohide <span class="hl opt">&amp;&amp;</span> <span class="hl num">0</span> <span class="hl opt">===</span> len<span class="hl opt">)</span>
+<span class="hl lin">  630 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>tohide<span class="hl opt">);</span>
+<span class="hl lin">  631 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  632 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  633 </span><span class="hl com">		 * Like {&#64;link ort.user#fillArray}, but showing an element if the </span>
+<span class="hl lin">  634 </span><span class="hl com">		 * array is empty or null.</span>
+<span class="hl lin">  635 </span><span class="hl com">		 * &#64;param {HTMLElement|null} e - The DOM element.</span>
+<span class="hl lin">  636 </span><span class="hl com">		 * &#64;param {HTMLElement|null} toshow - The DOM element to show.</span>
+<span class="hl lin">  637 </span><span class="hl com">		 * &#64;param {ort.userData|ort.userData[]|null} o - The array (or </span>
+<span class="hl lin">  638 </span><span class="hl com">		 * object) to fill.</span>
+<span class="hl lin">  639 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  640 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill}).</span>
+<span class="hl lin">  641 </span><span class="hl com">		 * &#64;function fillArrayOrShow</span>
+<span class="hl lin">  642 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  643 </span><span class="hl com">		 */</span>
+<span class="hl lin">  644 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArrayOrShow</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> toshow<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  645 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  646 </span>			<span class="hl kwa">var</span> len<span class="hl opt">;</span>
+<span class="hl lin">  647 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">)</span>
+<span class="hl lin">  648 </span>				len <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span>
+<span class="hl lin">  649 </span>			<span class="hl kwa">else if</span> <span class="hl opt">(</span><span class="hl kwa">this</span><span class="hl opt">.</span>obj <span class="hl kwa">instanceof</span> Array<span class="hl opt">)</span>
+<span class="hl lin">  650 </span>				len <span class="hl opt">=</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">.</span>length<span class="hl opt">;</span>
+<span class="hl lin">  651 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  652 </span>				len <span class="hl opt">=</span> <span class="hl num">1</span><span class="hl opt">;</span>
+<span class="hl lin">  653 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">  654 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  655 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> toshow<span class="hl opt">)</span>
+<span class="hl lin">  656 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>toshow<span class="hl opt">);</span>
+<span class="hl lin">  657 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  658 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> toshow <span class="hl opt">&amp;&amp;</span> <span class="hl num">0</span> <span class="hl opt">===</span> len<span class="hl opt">)</span>
+<span class="hl lin">  659 </span>				<span class="hl kwd">_show</span><span class="hl opt">(</span>toshow<span class="hl opt">);</span>
+<span class="hl lin">  660 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  661 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  662 </span><span class="hl com">		 * Like {&#64;link ort.user#fill} but for an array of {&#64;link </span>
+<span class="hl lin">  663 </span><span class="hl com">		 * ort.userData}.</span>
+<span class="hl lin">  664 </span><span class="hl com">		 * If the data is not an array, it is remapped as an array of </span>
+<span class="hl lin">  665 </span><span class="hl com">		 * one.</span>
+<span class="hl lin">  666 </span><span class="hl com">		 * This will save the first element within &quot;e&quot;, remove all </span>
+<span class="hl lin">  667 </span><span class="hl com">		 * children of &quot;e&quot;, then repeatedly clone the saved element and </span>
+<span class="hl lin">  668 </span><span class="hl com">		 * re-append it, filling in the cloned subtree with the array </span>
+<span class="hl lin">  669 </span><span class="hl com">		 * (inclusive of the subtree root).</span>
+<span class="hl lin">  670 </span><span class="hl com">		 * If the input array is empty or null, &quot;e&quot; is hidden by using </span>
+<span class="hl lin">  671 </span><span class="hl com">		 * the &lt;code&gt;hide&lt;/code&gt; class.</span>
+<span class="hl lin">  672 </span><span class="hl com">		 * Otherwise, the &lt;code&gt;hide&lt;/code&gt; class is removed.</span>
+<span class="hl lin">  673 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  674 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  675 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill}).</span>
+<span class="hl lin">  676 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  677 </span><span class="hl com">		 * &#64;function fillArray</span>
+<span class="hl lin">  678 </span><span class="hl com">		 */</span>
+<span class="hl lin">  679 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  680 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  681 </span>			<span class="hl kwa">var</span> j<span class="hl opt">;</span>
+<span class="hl lin">  682 </span>			<span class="hl kwa">var</span> o<span class="hl opt">;</span>
+<span class="hl lin">  683 </span>			<span class="hl kwa">var</span> cln<span class="hl opt">;</span>
+<span class="hl lin">  684 </span>			<span class="hl kwa">var</span> ar<span class="hl opt">;</span>
+<span class="hl lin">  685 </span>			<span class="hl kwa">var</span> row<span class="hl opt">;</span>
+<span class="hl lin">  686 </span>			o <span class="hl opt">=</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">;</span>
+<span class="hl lin">  687 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">  688 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  689 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> o <span class="hl opt">||</span> <span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  690 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  691 </span>			<span class="hl kwa">if</span> <span class="hl opt">( ! (</span>o <span class="hl kwa">instanceof</span> Array<span class="hl opt">)) {</span>
+<span class="hl lin">  692 </span>				ar <span class="hl opt">= [];</span>
+<span class="hl lin">  693 </span>				ar<span class="hl opt">.</span><span class="hl kwd">push</span><span class="hl opt">(</span>o<span class="hl opt">);</span>
+<span class="hl lin">  694 </span>				o <span class="hl opt">=</span> ar<span class="hl opt">;</span>
+<span class="hl lin">  695 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  696 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl num">0</span> <span class="hl opt">===</span> o<span class="hl opt">.</span>length<span class="hl opt">)</span>
+<span class="hl lin">  697 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  698 </span>			<span class="hl kwd">_show</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  699 </span>			row <span class="hl opt">=</span> e<span class="hl opt">.</span>children<span class="hl opt">[</span><span class="hl num">0</span><span class="hl opt">];</span>
+<span class="hl lin">  700 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> row<span class="hl opt">)</span>
+<span class="hl lin">  701 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  702 </span>			e<span class="hl opt">.</span><span class="hl kwd">removeChild</span><span class="hl opt">(</span>row<span class="hl opt">);</span>
+<span class="hl lin">  703 </span>			<span class="hl kwa">while</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">.</span>firstChild<span class="hl opt">)</span>
+<span class="hl lin">  704 </span>				e<span class="hl opt">.</span><span class="hl kwd">removeChild</span><span class="hl opt">(</span>e<span class="hl opt">.</span>firstChild<span class="hl opt">)</span>
+<span class="hl lin">  705 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>j <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> j <span class="hl opt">&lt;</span> o<span class="hl opt">.</span>length<span class="hl opt">;</span> j<span class="hl opt">++) {</span>
+<span class="hl lin">  706 </span>				cln <span class="hl opt">=</span> row<span class="hl opt">.</span><span class="hl kwd">cloneNode</span><span class="hl opt">(</span><span class="hl kwa">true</span><span class="hl opt">);</span>
+<span class="hl lin">  707 </span>				e<span class="hl opt">.</span><span class="hl kwd">appendChild</span><span class="hl opt">(</span>cln<span class="hl opt">);</span>
+<span class="hl lin">  708 </span>				<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>cln<span class="hl opt">,</span> o<span class="hl opt">[</span>j<span class="hl opt">],</span> <span class="hl kwa">true</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  709 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  710 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  711 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  712 </span><span class="hl com">		 * Like {&#64;link ort.user#fillArray} but instead of accepting a </span>
+<span class="hl lin">  713 </span><span class="hl com">		 * single element to fill, filling all elements by class name </span>
+<span class="hl lin">  714 </span><span class="hl com">		 * beneath the given root (non-inclusive).</span>
+<span class="hl lin">  715 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  716 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  717 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  718 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  719 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.user#fill} for details).</span>
+<span class="hl lin">  720 </span><span class="hl com">		 * &#64;function fillArrayByClass</span>
+<span class="hl lin">  721 </span><span class="hl com">		 * &#64;memberof ort.user#</span>
+<span class="hl lin">  722 </span><span class="hl com">		 */</span>
+<span class="hl lin">  723 </span>		user<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArrayByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  724 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  725 </span>			<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  726 </span>			<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  727 </span>			list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">);</span>
+<span class="hl lin">  728 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  729 </span>				<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  730 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  731 </span>
+<span class="hl lin">  732 </span>		<span class="hl kwa">return</span> user<span class="hl opt">;</span>
+<span class="hl lin">  733 </span>	<span class="hl opt">}());</span>
+<span class="hl lin">  734 </span>	ort<span class="hl opt">.</span>user <span class="hl opt">=</span> user<span class="hl opt">;</span>
+<span class="hl lin">  735 </span>
+<span class="hl lin">  736 </span>	<span class="hl com">/**</span>
+<span class="hl lin">  737 </span><span class="hl com">	 * Accepts {&#64;link ort.sessData} for writing into a DOM tree.</span>
+<span class="hl lin">  738 </span><span class="hl com">	 * &#64;param {(ort.sessData|ort.sessData[])} obj - The object(s) to </span>
+<span class="hl lin">  739 </span><span class="hl com">	 * write.</span>
+<span class="hl lin">  740 </span><span class="hl com">	 * &#64;memberof ort</span>
+<span class="hl lin">  741 </span><span class="hl com">	 * &#64;constructor</span>
+<span class="hl lin">  742 </span><span class="hl com">	 * &#64;class</span>
+<span class="hl lin">  743 </span><span class="hl com">	 */</span>
+<span class="hl lin">  744 </span>	<span class="hl kwa">var</span> sess <span class="hl opt">= (</span><span class="hl kwa">function</span><span class="hl opt">()</span>
+<span class="hl lin">  745 </span>	<span class="hl opt">{</span>
+<span class="hl lin">  746 </span>		<span class="hl kwa">function</span> <span class="hl kwd">sess</span><span class="hl opt">(</span>o<span class="hl opt">)</span>
+<span class="hl lin">  747 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  748 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span>obj <span class="hl opt">=</span> o<span class="hl opt">;</span>
+<span class="hl lin">  749 </span>		<span class="hl opt">}</span>
+<span class="hl lin">  750 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  751 </span><span class="hl com">		 * Write the {&#64;link ort.sessData} into the given HTMLElement in </span>
+<span class="hl lin">  752 </span><span class="hl com">		 * the DOM tree.</span>
+<span class="hl lin">  753 </span><span class="hl com">		 * If constructed with an array, the first element is used.</span>
+<span class="hl lin">  754 </span><span class="hl com">		 * Elements within (and including) &quot;e&quot; having the following </span>
+<span class="hl lin">  755 </span><span class="hl com">		 * classes are manipulated as follows:</span>
+<span class="hl lin">  756 </span><span class="hl com">		 * &lt;ul&gt;</span>
+<span class="hl lin">  757 </span><span class="hl com">		 * &lt;li&gt;sess-user-obj: invoke {&#64;link ort.user#fillInner} with user </span>
+<span class="hl lin">  758 </span><span class="hl com">		 * data&lt;/li&gt;</span>
+<span class="hl lin">  759 </span><span class="hl com">		 * &lt;li&gt;sess-userid-enum-select: sets the &lt;code&gt;select&lt;/code&gt; </span>
+<span class="hl lin">  760 </span><span class="hl com">		 * attribute for &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; values matching </span>
+<span class="hl lin">  761 </span><span class="hl com">		 * &lt;i&gt;userid&lt;/i&gt; under the element&lt;/li&gt;</span>
+<span class="hl lin">  762 </span><span class="hl com">		 * &lt;li&gt;sess-userid-value-checked: sets the &lt;code&gt;checked&lt;/code&gt; </span>
+<span class="hl lin">  763 </span><span class="hl com">		 * attribute under the element matching the input&lt;/li&gt;</span>
+<span class="hl lin">  764 </span><span class="hl com">		 * &lt;li&gt;sess-userid-text: replace contents with &lt;i&gt;userid&lt;/i&gt; </span>
+<span class="hl lin">  765 </span><span class="hl com">		 * data&lt;/li&gt;</span>
+<span class="hl lin">  766 </span><span class="hl com">		 * &lt;li&gt;sess-userid-value: replace &lt;code&gt;value&lt;/code&gt; attribute </span>
+<span class="hl lin">  767 </span><span class="hl com">		 * with &lt;i&gt;userid&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  768 </span><span class="hl com">		 * &lt;li&gt;sess-token-enum-select: sets the &lt;code&gt;select&lt;/code&gt; </span>
+<span class="hl lin">  769 </span><span class="hl com">		 * attribute for &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; values matching </span>
+<span class="hl lin">  770 </span><span class="hl com">		 * &lt;i&gt;token&lt;/i&gt; under the element&lt;/li&gt;</span>
+<span class="hl lin">  771 </span><span class="hl com">		 * &lt;li&gt;sess-token-value-checked: sets the &lt;code&gt;checked&lt;/code&gt; </span>
+<span class="hl lin">  772 </span><span class="hl com">		 * attribute under the element matching the input&lt;/li&gt;</span>
+<span class="hl lin">  773 </span><span class="hl com">		 * &lt;li&gt;sess-token-text: replace contents with &lt;i&gt;token&lt;/i&gt; </span>
+<span class="hl lin">  774 </span><span class="hl com">		 * data&lt;/li&gt;</span>
+<span class="hl lin">  775 </span><span class="hl com">		 * &lt;li&gt;sess-token-value: replace &lt;code&gt;value&lt;/code&gt; attribute </span>
+<span class="hl lin">  776 </span><span class="hl com">		 * with &lt;i&gt;token&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  777 </span><span class="hl com">		 * &lt;li&gt;sess-id-enum-select: sets the &lt;code&gt;select&lt;/code&gt; </span>
+<span class="hl lin">  778 </span><span class="hl com">		 * attribute for &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; values matching </span>
+<span class="hl lin">  779 </span><span class="hl com">		 * &lt;i&gt;id&lt;/i&gt; under the element&lt;/li&gt;</span>
+<span class="hl lin">  780 </span><span class="hl com">		 * &lt;li&gt;sess-id-value-checked: sets the &lt;code&gt;checked&lt;/code&gt; </span>
+<span class="hl lin">  781 </span><span class="hl com">		 * attribute under the element matching the input&lt;/li&gt;</span>
+<span class="hl lin">  782 </span><span class="hl com">		 * &lt;li&gt;sess-id-text: replace contents with &lt;i&gt;id&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  783 </span><span class="hl com">		 * &lt;li&gt;sess-id-value: replace &lt;code&gt;value&lt;/code&gt; attribute with </span>
+<span class="hl lin">  784 </span><span class="hl com">		 * &lt;i&gt;id&lt;/i&gt; data&lt;/li&gt;</span>
+<span class="hl lin">  785 </span><span class="hl com">		 * &lt;/ul&gt;</span>
+<span class="hl lin">  786 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  787 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional dictionary of </span>
+<span class="hl lin">  788 </span><span class="hl com">		 * functions keyed by structure and field name (e.g., &lt;i&gt;foo&lt;/i&gt; </span>
+<span class="hl lin">  789 </span><span class="hl com">		 * structure, &lt;i&gt;bar&lt;/i&gt; field would be &lt;code&gt;foo-bar&lt;/code&gt;). </span>
+<span class="hl lin">  790 </span><span class="hl com">		 * The value is a function for custom handling that accepts the </span>
+<span class="hl lin">  791 </span><span class="hl com">		 * &quot;e&quot; value, the name of the structure-field, and the value of </span>
+<span class="hl lin">  792 </span><span class="hl com">		 * the structure and field.</span>
+<span class="hl lin">  793 </span><span class="hl com">		 * You may also specify an array of functions instead of a </span>
+<span class="hl lin">  794 </span><span class="hl com">		 * singleton.</span>
+<span class="hl lin">  795 </span><span class="hl com">		 * These callbacks are invoked &lt;b&gt;after&lt;/b&gt; the generic classes </span>
+<span class="hl lin">  796 </span><span class="hl com">		 * are filled.</span>
+<span class="hl lin">  797 </span><span class="hl com">		 * &#64;function fill</span>
+<span class="hl lin">  798 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  799 </span><span class="hl com">		 */</span>
+<span class="hl lin">  800 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fill</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  801 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  802 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">,</span> <span class="hl kwa">true</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  803 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  804 </span>
+<span class="hl lin">  805 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  806 </span><span class="hl com">		 * Like {&#64;link ort.sess#fill} but instead of accepting a single </span>
+<span class="hl lin">  807 </span><span class="hl com">		 * element to fill, filling into all elements (non-inclusive) </span>
+<span class="hl lin">  808 </span><span class="hl com">		 * matching the given class name beneath (non-inclusive) the </span>
+<span class="hl lin">  809 </span><span class="hl com">		 * given root.</span>
+<span class="hl lin">  810 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  811 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  812 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  813 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  814 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill} for details).</span>
+<span class="hl lin">  815 </span><span class="hl com">		 * &#64;function fillByClass</span>
+<span class="hl lin">  816 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  817 </span><span class="hl com">		 */</span>
+<span class="hl lin">  818 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  819 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  820 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fillByClass</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwa">true</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  821 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  822 </span>
+<span class="hl lin">  823 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  824 </span><span class="hl com">		 * Like {&#64;link ort.sess#fillByClass} but inclusive the root and </span>
+<span class="hl lin">  825 </span><span class="hl com">		 * targets by class.</span>
+<span class="hl lin">  826 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  827 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  828 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  829 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  830 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill} for details).</span>
+<span class="hl lin">  831 </span><span class="hl com">		 * &#64;function fillInnerByClass</span>
+<span class="hl lin">  832 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  833 </span><span class="hl com">		 */</span>
+<span class="hl lin">  834 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillInnerByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  835 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  836 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fillByClass</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  837 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  838 </span>
+<span class="hl lin">  839 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  840 </span><span class="hl com">		 * Like {&#64;link ort.sess#fill} but not including the root element </span>
+<span class="hl lin">  841 </span><span class="hl com">		 * &quot;e&quot;.</span>
+<span class="hl lin">  842 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  843 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  844 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill} for details).</span>
+<span class="hl lin">  845 </span><span class="hl com">		 * &#64;function fillInner</span>
+<span class="hl lin">  846 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  847 </span><span class="hl com">		 */</span>
+<span class="hl lin">  848 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillInner</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  849 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  850 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  851 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  852 </span>
+<span class="hl lin">  853 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  854 </span><span class="hl com">		 * Implements all {&#64;link ort.sess#fill} functions.</span>
+<span class="hl lin">  855 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  856 </span><span class="hl com">		 * &#64;param {ort.sessData|ort.sessData[]|null} o - The object (or </span>
+<span class="hl lin">  857 </span><span class="hl com">		 * array) to fill.</span>
+<span class="hl lin">  858 </span><span class="hl com">		 * &#64;param {Boolean} inc - Whether to include the root or not when </span>
+<span class="hl lin">  859 </span><span class="hl com">		 * processing.</span>
+<span class="hl lin">  860 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  861 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill}).</span>
+<span class="hl lin">  862 </span><span class="hl com">		 * &#64;private</span>
+<span class="hl lin">  863 </span><span class="hl com">		 * &#64;function _fill</span>
+<span class="hl lin">  864 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  865 </span><span class="hl com">		 */</span>
+<span class="hl lin">  866 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">_fill</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> o<span class="hl opt">,</span> inc<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  867 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  868 </span>			<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  869 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> o <span class="hl opt">||</span> <span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin">  870 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  871 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span>o <span class="hl kwa">instanceof</span> Array<span class="hl opt">) {</span>
+<span class="hl lin">  872 </span>				<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl num">0</span> <span class="hl opt">===</span> o<span class="hl opt">.</span>length<span class="hl opt">)</span>
+<span class="hl lin">  873 </span>					<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  874 </span>				o <span class="hl opt">=</span> o<span class="hl opt">[</span><span class="hl num">0</span><span class="hl opt">];</span>
+<span class="hl lin">  875 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  876 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">typeof</span> custom <span class="hl opt">===</span> <span class="hl str">&apos;undefined&apos;</span><span class="hl opt">)</span>
+<span class="hl lin">  877 </span>				custom <span class="hl opt">=</span> <span class="hl kwa">null</span><span class="hl opt">;</span>
+<span class="hl lin">  878 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;sess&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;user&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>user<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">new</span> <span class="hl kwd">user</span><span class="hl opt">(</span>o<span class="hl opt">.</span>user<span class="hl opt">));</span>
+<span class="hl lin">  879 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;sess&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;userid&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>userid<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  880 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;sess&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;token&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>token<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  881 </span>			<span class="hl kwd">_fillField</span><span class="hl opt">(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;sess&apos;</span><span class="hl opt">,</span> <span class="hl str">&apos;id&apos;</span><span class="hl opt">,</span> custom<span class="hl opt">,</span> o<span class="hl opt">.</span>id<span class="hl opt">,</span> inc<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">,</span> <span class="hl kwa">null</span><span class="hl opt">);</span>
+<span class="hl lin">  882 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> custom <span class="hl opt">&amp;&amp;</span> <span class="hl str">&apos;sess&apos;</span> <span class="hl kwa">in</span> custom<span class="hl opt">) {</span>
+<span class="hl lin">  883 </span>				<span class="hl kwa">if</span> <span class="hl opt">(</span>custom<span class="hl opt">[</span><span class="hl str">&apos;sess&apos;</span><span class="hl opt">]</span> <span class="hl kwa">instanceof</span> Array<span class="hl opt">) {</span>
+<span class="hl lin">  884 </span>					<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> custom<span class="hl opt">[</span><span class="hl str">&apos;sess&apos;</span><span class="hl opt">].</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  885 </span>						<span class="hl opt">(</span>custom<span class="hl opt">[</span><span class="hl str">&apos;sess&apos;</span><span class="hl opt">])[</span>i<span class="hl opt">](</span>e<span class="hl opt">,</span> <span class="hl str">&apos;sess&apos;</span><span class="hl opt">,</span> o<span class="hl opt">);</span>
+<span class="hl lin">  886 </span>				<span class="hl opt">}</span> <span class="hl kwa">else</span> <span class="hl opt">{</span>
+<span class="hl lin">  887 </span>					<span class="hl opt">(</span>custom<span class="hl opt">[</span><span class="hl str">&apos;sess&apos;</span><span class="hl opt">])(</span>e<span class="hl opt">,</span> <span class="hl str">&apos;sess&apos;</span><span class="hl opt">,</span> o<span class="hl opt">);</span>
+<span class="hl lin">  888 </span>				<span class="hl opt">}</span>
+<span class="hl lin">  889 </span>			<span class="hl opt">}</span>
+<span class="hl lin">  890 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  891 </span>
+<span class="hl lin">  892 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  893 </span><span class="hl com">		 * Like {&#64;link ort.sess#_fill} but instead of accepting a single </span>
+<span class="hl lin">  894 </span><span class="hl com">		 * element to fill, filling into all elements matching the given </span>
+<span class="hl lin">  895 </span><span class="hl com">		 * class name beneath the given root.</span>
+<span class="hl lin">  896 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  897 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin">  898 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin">  899 </span><span class="hl com">		 * &#64;param {Boolean} inc - Whether to include the roots or not </span>
+<span class="hl lin">  900 </span><span class="hl com">		 * when processing.</span>
+<span class="hl lin">  901 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  902 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill} for details).</span>
+<span class="hl lin">  903 </span><span class="hl com">		 * &#64;private</span>
+<span class="hl lin">  904 </span><span class="hl com">		 * &#64;function _fillByClass</span>
+<span class="hl lin">  905 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  906 </span><span class="hl com">		 */</span>
+<span class="hl lin">  907 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">_fillByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  908 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  909 </span>			<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin">  910 </span>			<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin">  911 </span>			list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> inc<span class="hl opt">);</span>
+<span class="hl lin">  912 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin">  913 </span>				<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">,</span> inc<span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  914 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  915 </span>
+<span class="hl lin">  916 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  917 </span><span class="hl com">		 * Like {&#64;link ort.sess#fillArray}, but hiding an element if the </span>
+<span class="hl lin">  918 </span><span class="hl com">		 * array is empty or null.</span>
+<span class="hl lin">  919 </span><span class="hl com">		 * &#64;param {HTMLElement|null} e - The DOM element.</span>
+<span class="hl lin">  920 </span><span class="hl com">		 * &#64;param {HTMLElement|null} tohide - The DOM element to hide.</span>
+<span class="hl lin">  921 </span><span class="hl com">		 * &#64;param {ort.sessData|ort.sessData[]|null} o - The array (or </span>
+<span class="hl lin">  922 </span><span class="hl com">		 * object) to fill.</span>
+<span class="hl lin">  923 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  924 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill}).</span>
+<span class="hl lin">  925 </span><span class="hl com">		 * &#64;function fillArrayOrHide</span>
+<span class="hl lin">  926 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  927 </span><span class="hl com">		 */</span>
+<span class="hl lin">  928 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArrayOrHide</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> tohide<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  929 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  930 </span>			<span class="hl kwa">var</span> len<span class="hl opt">;</span>
+<span class="hl lin">  931 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">)</span>
+<span class="hl lin">  932 </span>				len <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span>
+<span class="hl lin">  933 </span>			<span class="hl kwa">else if</span> <span class="hl opt">(</span><span class="hl kwa">this</span><span class="hl opt">.</span>obj <span class="hl kwa">instanceof</span> Array<span class="hl opt">)</span>
+<span class="hl lin">  934 </span>				len <span class="hl opt">=</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">.</span>length<span class="hl opt">;</span>
+<span class="hl lin">  935 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  936 </span>				len <span class="hl opt">=</span> <span class="hl num">1</span><span class="hl opt">;</span>
+<span class="hl lin">  937 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">  938 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  939 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> tohide<span class="hl opt">)</span>
+<span class="hl lin">  940 </span>				<span class="hl kwd">_show</span><span class="hl opt">(</span>tohide<span class="hl opt">);</span>
+<span class="hl lin">  941 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  942 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> tohide <span class="hl opt">&amp;&amp;</span> <span class="hl num">0</span> <span class="hl opt">===</span> len<span class="hl opt">)</span>
+<span class="hl lin">  943 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>tohide<span class="hl opt">);</span>
+<span class="hl lin">  944 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  945 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  946 </span><span class="hl com">		 * Like {&#64;link ort.sess#fillArray}, but showing an element if the </span>
+<span class="hl lin">  947 </span><span class="hl com">		 * array is empty or null.</span>
+<span class="hl lin">  948 </span><span class="hl com">		 * &#64;param {HTMLElement|null} e - The DOM element.</span>
+<span class="hl lin">  949 </span><span class="hl com">		 * &#64;param {HTMLElement|null} toshow - The DOM element to show.</span>
+<span class="hl lin">  950 </span><span class="hl com">		 * &#64;param {ort.sessData|ort.sessData[]|null} o - The array (or </span>
+<span class="hl lin">  951 </span><span class="hl com">		 * object) to fill.</span>
+<span class="hl lin">  952 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  953 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill}).</span>
+<span class="hl lin">  954 </span><span class="hl com">		 * &#64;function fillArrayOrShow</span>
+<span class="hl lin">  955 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  956 </span><span class="hl com">		 */</span>
+<span class="hl lin">  957 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArrayOrShow</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> toshow<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  958 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  959 </span>			<span class="hl kwa">var</span> len<span class="hl opt">;</span>
+<span class="hl lin">  960 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">)</span>
+<span class="hl lin">  961 </span>				len <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span>
+<span class="hl lin">  962 </span>			<span class="hl kwa">else if</span> <span class="hl opt">(</span><span class="hl kwa">this</span><span class="hl opt">.</span>obj <span class="hl kwa">instanceof</span> Array<span class="hl opt">)</span>
+<span class="hl lin">  963 </span>				len <span class="hl opt">=</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">.</span>length<span class="hl opt">;</span>
+<span class="hl lin">  964 </span>			<span class="hl kwa">else</span>
+<span class="hl lin">  965 </span>				len <span class="hl opt">=</span> <span class="hl num">1</span><span class="hl opt">;</span>
+<span class="hl lin">  966 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin">  967 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin">  968 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> toshow<span class="hl opt">)</span>
+<span class="hl lin">  969 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>toshow<span class="hl opt">);</span>
+<span class="hl lin">  970 </span>			<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin">  971 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> toshow <span class="hl opt">&amp;&amp;</span> <span class="hl num">0</span> <span class="hl opt">===</span> len<span class="hl opt">)</span>
+<span class="hl lin">  972 </span>				<span class="hl kwd">_show</span><span class="hl opt">(</span>toshow<span class="hl opt">);</span>
+<span class="hl lin">  973 </span>		<span class="hl opt">};</span>
+<span class="hl lin">  974 </span>		<span class="hl com">/**</span>
+<span class="hl lin">  975 </span><span class="hl com">		 * Like {&#64;link ort.sess#fill} but for an array of {&#64;link </span>
+<span class="hl lin">  976 </span><span class="hl com">		 * ort.sessData}.</span>
+<span class="hl lin">  977 </span><span class="hl com">		 * If the data is not an array, it is remapped as an array of </span>
+<span class="hl lin">  978 </span><span class="hl com">		 * one.</span>
+<span class="hl lin">  979 </span><span class="hl com">		 * This will save the first element within &quot;e&quot;, remove all </span>
+<span class="hl lin">  980 </span><span class="hl com">		 * children of &quot;e&quot;, then repeatedly clone the saved element and </span>
+<span class="hl lin">  981 </span><span class="hl com">		 * re-append it, filling in the cloned subtree with the array </span>
+<span class="hl lin">  982 </span><span class="hl com">		 * (inclusive of the subtree root).</span>
+<span class="hl lin">  983 </span><span class="hl com">		 * If the input array is empty or null, &quot;e&quot; is hidden by using </span>
+<span class="hl lin">  984 </span><span class="hl com">		 * the &lt;code&gt;hide&lt;/code&gt; class.</span>
+<span class="hl lin">  985 </span><span class="hl com">		 * Otherwise, the &lt;code&gt;hide&lt;/code&gt; class is removed.</span>
+<span class="hl lin">  986 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin">  987 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin">  988 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill}).</span>
+<span class="hl lin">  989 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin">  990 </span><span class="hl com">		 * &#64;function fillArray</span>
+<span class="hl lin">  991 </span><span class="hl com">		 */</span>
+<span class="hl lin">  992 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin">  993 </span>		<span class="hl opt">{</span>
+<span class="hl lin">  994 </span>			<span class="hl kwa">var</span> j<span class="hl opt">;</span>
+<span class="hl lin">  995 </span>			<span class="hl kwa">var</span> o<span class="hl opt">;</span>
+<span class="hl lin">  996 </span>			<span class="hl kwa">var</span> cln<span class="hl opt">;</span>
+<span class="hl lin">  997 </span>			<span class="hl kwa">var</span> ar<span class="hl opt">;</span>
+<span class="hl lin">  998 </span>			<span class="hl kwa">var</span> row<span class="hl opt">;</span>
+<span class="hl lin">  999 </span>			o <span class="hl opt">=</span> <span class="hl kwa">this</span><span class="hl opt">.</span>obj<span class="hl opt">;</span>
+<span class="hl lin"> 1000 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">)</span>
+<span class="hl lin"> 1001 </span>				<span class="hl kwd">_hide</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin"> 1002 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> o <span class="hl opt">||</span> <span class="hl kwa">null</span> <span class="hl opt">===</span> e<span class="hl opt">)</span>
+<span class="hl lin"> 1003 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin"> 1004 </span>			<span class="hl kwa">if</span> <span class="hl opt">( ! (</span>o <span class="hl kwa">instanceof</span> Array<span class="hl opt">)) {</span>
+<span class="hl lin"> 1005 </span>				ar <span class="hl opt">= [];</span>
+<span class="hl lin"> 1006 </span>				ar<span class="hl opt">.</span><span class="hl kwd">push</span><span class="hl opt">(</span>o<span class="hl opt">);</span>
+<span class="hl lin"> 1007 </span>				o <span class="hl opt">=</span> ar<span class="hl opt">;</span>
+<span class="hl lin"> 1008 </span>			<span class="hl opt">}</span>
+<span class="hl lin"> 1009 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl num">0</span> <span class="hl opt">===</span> o<span class="hl opt">.</span>length<span class="hl opt">)</span>
+<span class="hl lin"> 1010 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin"> 1011 </span>			<span class="hl kwd">_show</span><span class="hl opt">(</span>e<span class="hl opt">);</span>
+<span class="hl lin"> 1012 </span>			row <span class="hl opt">=</span> e<span class="hl opt">.</span>children<span class="hl opt">[</span><span class="hl num">0</span><span class="hl opt">];</span>
+<span class="hl lin"> 1013 </span>			<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">===</span> row<span class="hl opt">)</span>
+<span class="hl lin"> 1014 </span>				<span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin"> 1015 </span>			e<span class="hl opt">.</span><span class="hl kwd">removeChild</span><span class="hl opt">(</span>row<span class="hl opt">);</span>
+<span class="hl lin"> 1016 </span>			<span class="hl kwa">while</span> <span class="hl opt">(</span><span class="hl kwa">null</span> <span class="hl opt">!==</span> e<span class="hl opt">.</span>firstChild<span class="hl opt">)</span>
+<span class="hl lin"> 1017 </span>				e<span class="hl opt">.</span><span class="hl kwd">removeChild</span><span class="hl opt">(</span>e<span class="hl opt">.</span>firstChild<span class="hl opt">)</span>
+<span class="hl lin"> 1018 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>j <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> j <span class="hl opt">&lt;</span> o<span class="hl opt">.</span>length<span class="hl opt">;</span> j<span class="hl opt">++) {</span>
+<span class="hl lin"> 1019 </span>				cln <span class="hl opt">=</span> row<span class="hl opt">.</span><span class="hl kwd">cloneNode</span><span class="hl opt">(</span><span class="hl kwa">true</span><span class="hl opt">);</span>
+<span class="hl lin"> 1020 </span>				e<span class="hl opt">.</span><span class="hl kwd">appendChild</span><span class="hl opt">(</span>cln<span class="hl opt">);</span>
+<span class="hl lin"> 1021 </span>				<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">_fill</span><span class="hl opt">(</span>cln<span class="hl opt">,</span> o<span class="hl opt">[</span>j<span class="hl opt">],</span> <span class="hl kwa">true</span><span class="hl opt">,</span> custom<span class="hl opt">);</span>
+<span class="hl lin"> 1022 </span>			<span class="hl opt">}</span>
+<span class="hl lin"> 1023 </span>		<span class="hl opt">};</span>
+<span class="hl lin"> 1024 </span>		<span class="hl com">/**</span>
+<span class="hl lin"> 1025 </span><span class="hl com">		 * Like {&#64;link ort.sess#fillArray} but instead of accepting a </span>
+<span class="hl lin"> 1026 </span><span class="hl com">		 * single element to fill, filling all elements by class name </span>
+<span class="hl lin"> 1027 </span><span class="hl com">		 * beneath the given root (non-inclusive).</span>
+<span class="hl lin"> 1028 </span><span class="hl com">		 * &#64;param {HTMLElement} e - The DOM element.</span>
+<span class="hl lin"> 1029 </span><span class="hl com">		 * &#64;param {String} name - The name of the class into which to </span>
+<span class="hl lin"> 1030 </span><span class="hl com">		 * fill.</span>
+<span class="hl lin"> 1031 </span><span class="hl com">		 * &#64;param {ort.DataCallbacks} custom - The optional custom </span>
+<span class="hl lin"> 1032 </span><span class="hl com">		 * handler dictionary (see {&#64;link ort.sess#fill} for details).</span>
+<span class="hl lin"> 1033 </span><span class="hl com">		 * &#64;function fillArrayByClass</span>
+<span class="hl lin"> 1034 </span><span class="hl com">		 * &#64;memberof ort.sess#</span>
+<span class="hl lin"> 1035 </span><span class="hl com">		 */</span>
+<span class="hl lin"> 1036 </span>		sess<span class="hl opt">.</span><span class="hl kwa">prototype</span><span class="hl opt">.</span><span class="hl kwd">fillArrayByClass</span> <span class="hl opt">=</span> <span class="hl kwa">function</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> custom<span class="hl opt">)</span>
+<span class="hl lin"> 1037 </span>		<span class="hl opt">{</span>
+<span class="hl lin"> 1038 </span>			<span class="hl kwa">var</span> i<span class="hl opt">;</span>
+<span class="hl lin"> 1039 </span>			<span class="hl kwa">var</span> list<span class="hl opt">;</span>
+<span class="hl lin"> 1040 </span>			list <span class="hl opt">=</span> <span class="hl kwd">_elemList</span><span class="hl opt">(</span>e<span class="hl opt">,</span> name<span class="hl opt">,</span> <span class="hl kwa">false</span><span class="hl opt">);</span>
+<span class="hl lin"> 1041 </span>			<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> list<span class="hl opt">.</span>length<span class="hl opt">;</span> i<span class="hl opt">++)</span>
+<span class="hl lin"> 1042 </span>				<span class="hl kwa">this</span><span class="hl opt">.</span><span class="hl kwd">fillArray</span><span class="hl opt">(</span>list<span class="hl opt">[</span>i<span class="hl opt">],</span> custom<span class="hl opt">);</span>
+<span class="hl lin"> 1043 </span>		<span class="hl opt">};</span>
+<span class="hl lin"> 1044 </span>
+<span class="hl lin"> 1045 </span>		<span class="hl kwa">return</span> sess<span class="hl opt">;</span>
+<span class="hl lin"> 1046 </span>	<span class="hl opt">}());</span>
+<span class="hl lin"> 1047 </span>	ort<span class="hl opt">.</span>sess <span class="hl opt">=</span> sess<span class="hl opt">;</span>
+<span class="hl lin"> 1048 </span>
+<span class="hl lin"> 1049 </span>	ort<span class="hl opt">.</span>user <span class="hl opt">=</span> user<span class="hl opt">;</span>
+<span class="hl lin"> 1050 </span>	ort<span class="hl opt">.</span>sess <span class="hl opt">=</span> sess<span class="hl opt">;</span>
+<span class="hl lin"> 1051 </span><span class="hl opt">})(</span>ort <span class="hl opt">|| (</span>ort <span class="hl opt">= {}));</span>
+</pre>
+</body>
+</html>
+<!--HTML generated by highlight 3.49, http://www.andre-simon.de/-->

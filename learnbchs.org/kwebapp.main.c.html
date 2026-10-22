@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>kwebapp.main.c</title>
+<style type="text/css">
+/* highlight theme: Github Source View */
+body.hl	{ background-color:#ffffff; }
+pre.hl	{ color:#000000; background-color:#ffffff; font-size:10pt; font-family:'Courier New',monospace;}
+.hl.num { color:#0086b3; }
+.hl.esc { color:#183691; }
+.hl.str { color:#183691; }
+.hl.pps { color:#183691; }
+.hl.slc { color:#969896; }
+.hl.com { color:#969896; }
+.hl.ppc { color:#a71d5d; }
+.hl.opt { color:#000000; }
+.hl.ipl { color:#183691; }
+.hl.lin { color:#b2b2b2; }
+.hl.kwa { color:#a71d5d; }
+.hl.kwb { color:#0086b3; }
+.hl.kwc { color:#0086b3; }
+.hl.kwd { color:#0086b3; }
+</style>
+</head>
+<body class="hl">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl com">/*  $Id: kwebapp.main.c,v 1.3 2019/07/08 11:11:58 kristaps Exp $ */</span>
+<span class="hl lin">    2 </span><span class="hl ppc">#include &lt;sys/queue.h&gt;</span>
+<span class="hl lin">    3 </span>
+<span class="hl lin">    4 </span><span class="hl ppc">#include &lt;inttypes.h&gt;</span>
+<span class="hl lin">    5 </span><span class="hl ppc">#include &lt;stdarg.h&gt;</span>
+<span class="hl lin">    6 </span><span class="hl ppc">#include &lt;stdint.h&gt;</span>
+<span class="hl lin">    7 </span><span class="hl ppc">#include &lt;stdio.h&gt;</span>
+<span class="hl lin">    8 </span><span class="hl ppc">#include &lt;stdlib.h&gt;</span>
+<span class="hl lin">    9 </span><span class="hl ppc">#include &lt;string.h&gt;</span>
+<span class="hl lin">   10 </span><span class="hl ppc">#include &lt;time.h&gt;</span>
+<span class="hl lin">   11 </span><span class="hl ppc">#include &lt;unistd.h&gt;</span>
+<span class="hl lin">   12 </span>
+<span class="hl lin">   13 </span><span class="hl ppc">#include &lt;kcgi.h&gt;</span>
+<span class="hl lin">   14 </span><span class="hl ppc">#include &lt;ksql.h&gt;</span>
+<span class="hl lin">   15 </span><span class="hl ppc">#include &lt;kcgijson.h&gt;</span>
+<span class="hl lin">   16 </span>
+<span class="hl lin">   17 </span><span class="hl ppc">#include</span> <span class="hl pps">&quot;kwebapp.db.h&quot;</span><span class="hl ppc"></span>
+<span class="hl lin">   18 </span>
+<span class="hl lin">   19 </span><span class="hl kwb">enum</span>  page <span class="hl opt">{</span>
+<span class="hl lin">   20 </span>  PAGE_HOME<span class="hl opt">,</span>
+<span class="hl lin">   21 </span>  PAGE_LOGIN<span class="hl opt">,</span>
+<span class="hl lin">   22 </span>  PAGE_LOGOUT<span class="hl opt">,</span>
+<span class="hl lin">   23 </span>  PAGE__MAX
+<span class="hl lin">   24 </span><span class="hl opt">};</span>
+<span class="hl lin">   25 </span>
+<span class="hl lin">   26 </span><span class="hl kwb">static const char</span> <span class="hl opt">*</span><span class="hl kwb">const</span> pages<span class="hl opt">[</span>PAGE__MAX<span class="hl opt">] = {</span>
+<span class="hl lin">   27 </span>  <span class="hl str">&quot;home&quot;</span><span class="hl opt">,</span> <span class="hl com">/* PAGE_HOME */</span>
+<span class="hl lin">   28 </span>  <span class="hl str">&quot;login&quot;</span><span class="hl opt">,</span> <span class="hl com">/* PAGE_LOGIN */</span>
+<span class="hl lin">   29 </span>  <span class="hl str">&quot;logout&quot;</span><span class="hl opt">,</span> <span class="hl com">/* PAGE_LOGOUT */</span>
+<span class="hl lin">   30 </span><span class="hl opt">};</span>
+<span class="hl lin">   31 </span>
+<span class="hl lin">   32 </span><span class="hl com">/*</span>
+<span class="hl lin">   33 </span><span class="hl com"> * Fill out all HTTP secure headers.</span>
+<span class="hl lin">   34 </span><span class="hl com"> * Use the existing document&apos;s MIME type.</span>
+<span class="hl lin">   35 </span><span class="hl com"> */</span>
+<span class="hl lin">   36 </span><span class="hl kwb">static void</span>
+<span class="hl lin">   37 </span><span class="hl kwd">http_alloc</span><span class="hl opt">(</span><span class="hl kwb">struct</span> kreq <span class="hl opt">*</span>r<span class="hl opt">,</span> <span class="hl kwb">enum</span> khttp code<span class="hl opt">)</span>
+<span class="hl lin">   38 </span><span class="hl opt">{</span>
+<span class="hl lin">   39 </span>
+<span class="hl lin">   40 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_STATUS<span class="hl opt">],</span> 
+<span class="hl lin">   41 </span>    <span class="hl str">&quot;%s&quot;</span><span class="hl opt">,</span> khttps<span class="hl opt">[</span>code<span class="hl opt">]);</span>
+<span class="hl lin">   42 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_CONTENT_TYPE<span class="hl opt">],</span> 
+<span class="hl lin">   43 </span>    <span class="hl str">&quot;%s&quot;</span><span class="hl opt">,</span> kmimetypes<span class="hl opt">[</span>r<span class="hl opt">-&gt;</span>mime<span class="hl opt">]);</span>
+<span class="hl lin">   44 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> <span class="hl str">&quot;X-Content-Type-Options&quot;</span><span class="hl opt">,</span> <span class="hl str">&quot;nosniff&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   45 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> <span class="hl str">&quot;X-Frame-Options&quot;</span><span class="hl opt">,</span> <span class="hl str">&quot;DENY&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   46 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> <span class="hl str">&quot;X-XSS-Protection&quot;</span><span class="hl opt">,</span> <span class="hl str">&quot;1; mode=block&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   47 </span><span class="hl opt">}</span>
+<span class="hl lin">   48 </span>
+<span class="hl lin">   49 </span><span class="hl com">/*</span>
+<span class="hl lin">   50 </span><span class="hl com"> * Fill out all headers with http_alloc() then start the HTTP document</span>
+<span class="hl lin">   51 </span><span class="hl com"> * body (no more headers after this point!)</span>
+<span class="hl lin">   52 </span><span class="hl com"> */</span>
+<span class="hl lin">   53 </span><span class="hl kwb">static void</span>
+<span class="hl lin">   54 </span><span class="hl kwd">http_open</span><span class="hl opt">(</span><span class="hl kwb">struct</span> kreq <span class="hl opt">*</span>r<span class="hl opt">,</span> <span class="hl kwb">enum</span> khttp code<span class="hl opt">)</span>
+<span class="hl lin">   55 </span><span class="hl opt">{</span>
+<span class="hl lin">   56 </span>
+<span class="hl lin">   57 </span>  <span class="hl kwd">http_alloc</span><span class="hl opt">(</span>r<span class="hl opt">,</span> code<span class="hl opt">);</span>
+<span class="hl lin">   58 </span>  <span class="hl kwd">khttp_body</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">   59 </span><span class="hl opt">}</span>
+<span class="hl lin">   60 </span>
+<span class="hl lin">   61 </span><span class="hl com">/*</span>
+<span class="hl lin">   62 </span><span class="hl com"> * Emit an empty JSON document.</span>
+<span class="hl lin">   63 </span><span class="hl com"> */</span>
+<span class="hl lin">   64 </span><span class="hl kwb">static void</span>
+<span class="hl lin">   65 </span><span class="hl kwd">json_emptydoc</span><span class="hl opt">(</span><span class="hl kwb">struct</span> kreq <span class="hl opt">*</span>r<span class="hl opt">)</span>
+<span class="hl lin">   66 </span><span class="hl opt">{</span>
+<span class="hl lin">   67 </span>  <span class="hl kwb">struct</span> kjsonreq   req<span class="hl opt">;</span>
+<span class="hl lin">   68 </span>
+<span class="hl lin">   69 </span>  <span class="hl kwd">kjson_open</span><span class="hl opt">(&amp;</span>req<span class="hl opt">,</span> r<span class="hl opt">);</span>
+<span class="hl lin">   70 </span>  <span class="hl kwd">kjson_obj_open</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">   71 </span>  <span class="hl kwd">kjson_obj_close</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">   72 </span>  <span class="hl kwd">kjson_close</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">   73 </span><span class="hl opt">}</span>
+<span class="hl lin">   74 </span>
+<span class="hl lin">   75 </span><span class="hl com">/*</span>
+<span class="hl lin">   76 </span><span class="hl com"> * Login a given user by their identifier.</span>
+<span class="hl lin">   77 </span><span class="hl com"> * Set the session cookie to expire in one year.</span>
+<span class="hl lin">   78 </span><span class="hl com"> * Return 400 on bad credentials or missing fields.</span>
+<span class="hl lin">   79 </span><span class="hl com"> * Return 200 on success.</span>
+<span class="hl lin">   80 </span><span class="hl com"> */</span>
+<span class="hl lin">   81 </span><span class="hl kwb">static void</span>
+<span class="hl lin">   82 </span><span class="hl kwd">sendlogin</span><span class="hl opt">(</span><span class="hl kwb">struct</span> kreq <span class="hl opt">*</span>r<span class="hl opt">)</span>
+<span class="hl lin">   83 </span><span class="hl opt">{</span>
+<span class="hl lin">   84 </span>  <span class="hl kwb">int64_t</span>     sid<span class="hl opt">,</span> token<span class="hl opt">;</span>
+<span class="hl lin">   85 </span>  <span class="hl kwb">struct</span> kpair  <span class="hl opt">*</span>kpi<span class="hl opt">, *</span>kpp<span class="hl opt">;</span>
+<span class="hl lin">   86 </span>  <span class="hl kwb">char</span>     buf<span class="hl opt">[</span><span class="hl num">64</span><span class="hl opt">];</span>
+<span class="hl lin">   87 </span>  <span class="hl kwb">struct</span> user  <span class="hl opt">*</span>pp<span class="hl opt">;</span>
+<span class="hl lin">   88 </span>  <span class="hl kwb">time_t</span>     t <span class="hl opt">=</span> <span class="hl kwd">time</span><span class="hl opt">(</span>NULL<span class="hl opt">);</span>
+<span class="hl lin">   89 </span>
+<span class="hl lin">   90 </span>  <span class="hl kwa">if</span> <span class="hl opt">((</span>kpi <span class="hl opt">=</span> r<span class="hl opt">-&gt;</span>fieldmap<span class="hl opt">[</span>VALID_USER_EMAIL<span class="hl opt">]) ==</span> NULL <span class="hl opt">||</span>
+<span class="hl lin">   91 </span>      <span class="hl opt">(</span>kpp <span class="hl opt">=</span> r<span class="hl opt">-&gt;</span>fieldmap<span class="hl opt">[</span>VALID_USER_HASH<span class="hl opt">]) ==</span> NULL<span class="hl opt">) {</span>
+<span class="hl lin">   92 </span>    <span class="hl kwd">http_open</span><span class="hl opt">(</span>r<span class="hl opt">,</span> KHTTP_400<span class="hl opt">);</span>
+<span class="hl lin">   93 </span>    <span class="hl kwd">json_emptydoc</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">   94 </span>    <span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">   95 </span>  <span class="hl opt">}</span> 
+<span class="hl lin">   96 </span>
+<span class="hl lin">   97 </span>  pp <span class="hl opt">=</span> <span class="hl kwd">db_user_get_creds</span><span class="hl opt">(</span>r<span class="hl opt">-&gt;</span>arg<span class="hl opt">,</span> 
+<span class="hl lin">   98 </span>    kpi<span class="hl opt">-&gt;</span>parsed<span class="hl opt">.</span>s<span class="hl opt">,</span> kpp<span class="hl opt">-&gt;</span>parsed<span class="hl opt">.</span>s<span class="hl opt">);</span>
+<span class="hl lin">   99 </span>
+<span class="hl lin">  100 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span>pp <span class="hl opt">==</span> NULL<span class="hl opt">) {</span>
+<span class="hl lin">  101 </span>    <span class="hl kwd">http_open</span><span class="hl opt">(</span>r<span class="hl opt">,</span> KHTTP_400<span class="hl opt">);</span>
+<span class="hl lin">  102 </span>    <span class="hl kwd">json_emptydoc</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">  103 </span>    <span class="hl kwa">return</span><span class="hl opt">;</span>
+<span class="hl lin">  104 </span>  <span class="hl opt">}</span>
+<span class="hl lin">  105 </span>
+<span class="hl lin">  106 </span>  token <span class="hl opt">=</span> <span class="hl kwd">arc4random</span><span class="hl opt">();</span>
+<span class="hl lin">  107 </span>  sid <span class="hl opt">=</span> <span class="hl kwd">db_sess_insert</span><span class="hl opt">(</span>r<span class="hl opt">-&gt;</span>arg<span class="hl opt">,</span> pp<span class="hl opt">-&gt;</span>id<span class="hl opt">,</span> token<span class="hl opt">);</span>
+<span class="hl lin">  108 </span>  <span class="hl kwd">kutil_epoch2str</span><span class="hl opt">(</span>t <span class="hl opt">+</span> <span class="hl num">60</span> <span class="hl opt">*</span> <span class="hl num">60</span> <span class="hl opt">*</span> <span class="hl num">24</span> <span class="hl opt">*</span> <span class="hl num">365</span><span class="hl opt">,</span> buf<span class="hl opt">,</span> <span class="hl kwa">sizeof</span><span class="hl opt">(</span>buf<span class="hl opt">));</span>
+<span class="hl lin">  109 </span>
+<span class="hl lin">  110 </span>  <span class="hl kwd">http_alloc</span><span class="hl opt">(</span>r<span class="hl opt">,</span> KHTTP_200<span class="hl opt">);</span>
+<span class="hl lin">  111 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_SET_COOKIE<span class="hl opt">],</span>
+<span class="hl lin">  112 </span>    <span class="hl str">&quot;%s=%&quot;</span> PRId64 <span class="hl str">&quot;; secure; &quot;</span>
+<span class="hl lin">  113 </span>    <span class="hl str">&quot;HttpOnly; path=/; expires=%s&quot;</span><span class="hl opt">,</span>
+<span class="hl lin">  114 </span>    valid_keys<span class="hl opt">[</span>VALID_SESS_TOKEN<span class="hl opt">].</span>name<span class="hl opt">,</span> token<span class="hl opt">,</span> buf<span class="hl opt">);</span>
+<span class="hl lin">  115 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_SET_COOKIE<span class="hl opt">],</span>
+<span class="hl lin">  116 </span>    <span class="hl str">&quot;%s=%&quot;</span> PRId64 <span class="hl str">&quot;; secure; &quot;</span>
+<span class="hl lin">  117 </span>    <span class="hl str">&quot;HttpOnly; path=/; expires=%s&quot;</span><span class="hl opt">,</span> 
+<span class="hl lin">  118 </span>    valid_keys<span class="hl opt">[</span>VALID_SESS_ID<span class="hl opt">].</span>name<span class="hl opt">,</span> sid<span class="hl opt">,</span> buf<span class="hl opt">);</span>
+<span class="hl lin">  119 </span>  <span class="hl kwd">khttp_body</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">  120 </span>  <span class="hl kwd">json_emptydoc</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">  121 </span>  <span class="hl kwd">db_user_free</span><span class="hl opt">(</span>pp<span class="hl opt">);</span>
+<span class="hl lin">  122 </span><span class="hl opt">}</span>
+<span class="hl lin">  123 </span>
+<span class="hl lin">  124 </span><span class="hl com">/*</span>
+<span class="hl lin">  125 </span><span class="hl com"> * Homepage for users.</span>
+<span class="hl lin">  126 </span><span class="hl com"> * Returns 403 if not logged in or not in experiment state.</span>
+<span class="hl lin">  127 </span><span class="hl com"> * Returns 200 otherwise with empty document.</span>
+<span class="hl lin">  128 </span><span class="hl com"> */</span>
+<span class="hl lin">  129 </span><span class="hl kwb">static void</span>
+<span class="hl lin">  130 </span><span class="hl kwd">sendhome</span><span class="hl opt">(</span><span class="hl kwb">struct</span> kreq <span class="hl opt">*</span>r<span class="hl opt">,</span> <span class="hl kwb">const struct</span> sess <span class="hl opt">*</span>u<span class="hl opt">)</span>
+<span class="hl lin">  131 </span><span class="hl opt">{</span>
+<span class="hl lin">  132 </span>  <span class="hl kwb">struct</span> kjsonreq   req<span class="hl opt">;</span>
+<span class="hl lin">  133 </span>
+<span class="hl lin">  134 </span>  <span class="hl kwd">http_open</span><span class="hl opt">(</span>r<span class="hl opt">,</span> KHTTP_200<span class="hl opt">);</span>
+<span class="hl lin">  135 </span>  <span class="hl kwd">kjson_open</span><span class="hl opt">(&amp;</span>req<span class="hl opt">,</span> r<span class="hl opt">);</span>
+<span class="hl lin">  136 </span>  <span class="hl kwd">kjson_obj_open</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">  137 </span>  <span class="hl kwd">json_sess_obj</span><span class="hl opt">(&amp;</span>req<span class="hl opt">,</span> u<span class="hl opt">);</span>
+<span class="hl lin">  138 </span>  <span class="hl kwd">kjson_obj_close</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">  139 </span>  <span class="hl kwd">kjson_close</span><span class="hl opt">(&amp;</span>req<span class="hl opt">);</span>
+<span class="hl lin">  140 </span><span class="hl opt">}</span>
+<span class="hl lin">  141 </span>
+<span class="hl lin">  142 </span><span class="hl kwb">static void</span>
+<span class="hl lin">  143 </span><span class="hl kwd">sendlogout</span><span class="hl opt">(</span><span class="hl kwb">struct</span> kreq <span class="hl opt">*</span>r<span class="hl opt">,</span> <span class="hl kwb">const struct</span> sess <span class="hl opt">*</span>us<span class="hl opt">)</span>
+<span class="hl lin">  144 </span><span class="hl opt">{</span>
+<span class="hl lin">  145 </span>  <span class="hl kwb">char</span>     buf<span class="hl opt">[</span><span class="hl num">32</span><span class="hl opt">];</span>
+<span class="hl lin">  146 </span>
+<span class="hl lin">  147 </span>  <span class="hl kwd">kutil_epoch2str</span><span class="hl opt">(</span><span class="hl num">0</span><span class="hl opt">,</span> buf<span class="hl opt">,</span> <span class="hl kwa">sizeof</span><span class="hl opt">(</span>buf<span class="hl opt">));</span>
+<span class="hl lin">  148 </span>  <span class="hl kwd">http_alloc</span><span class="hl opt">(</span>r<span class="hl opt">,</span> KHTTP_200<span class="hl opt">);</span>
+<span class="hl lin">  149 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_SET_COOKIE<span class="hl opt">],</span>
+<span class="hl lin">  150 </span>    <span class="hl str">&quot;%s=; path=/; secure; HttpOnly; expires=%s&quot;</span><span class="hl opt">,</span> 
+<span class="hl lin">  151 </span>    valid_keys<span class="hl opt">[</span>VALID_SESS_TOKEN<span class="hl opt">].</span>name<span class="hl opt">,</span> buf<span class="hl opt">);</span>
+<span class="hl lin">  152 </span>  <span class="hl kwd">khttp_head</span><span class="hl opt">(</span>r<span class="hl opt">,</span> kresps<span class="hl opt">[</span>KRESP_SET_COOKIE<span class="hl opt">],</span>
+<span class="hl lin">  153 </span>    <span class="hl str">&quot;%s=; path=/; secure; HttpOnly; expires=%s&quot;</span><span class="hl opt">,</span> 
+<span class="hl lin">  154 </span>    valid_keys<span class="hl opt">[</span>VALID_SESS_ID<span class="hl opt">].</span>name<span class="hl opt">,</span> buf<span class="hl opt">);</span>
+<span class="hl lin">  155 </span>  <span class="hl kwd">khttp_body</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">  156 </span>  <span class="hl kwd">json_emptydoc</span><span class="hl opt">(</span>r<span class="hl opt">);</span>
+<span class="hl lin">  157 </span>  <span class="hl kwd">db_sess_delete_id</span><span class="hl opt">(</span>r<span class="hl opt">-&gt;</span>arg<span class="hl opt">,</span> us<span class="hl opt">-&gt;</span>id<span class="hl opt">);</span>
+<span class="hl lin">  158 </span><span class="hl opt">}</span>
+<span class="hl lin">  159 </span>
+<span class="hl lin">  160 </span><span class="hl kwb">int</span>
+<span class="hl lin">  161 </span><span class="hl kwd">main</span><span class="hl opt">(</span><span class="hl kwb">void</span><span class="hl opt">)</span>
+<span class="hl lin">  162 </span><span class="hl opt">{</span>
+<span class="hl lin">  163 </span>  <span class="hl kwb">struct</span> kreq   r<span class="hl opt">;</span>
+<span class="hl lin">  164 </span>  <span class="hl kwb">enum</span> kcgi_err   er<span class="hl opt">;</span>
+<span class="hl lin">  165 </span>  <span class="hl kwb">struct</span> sess  <span class="hl opt">*</span>us <span class="hl opt">=</span> NULL<span class="hl opt">;</span>
+<span class="hl lin">  166 </span>
+<span class="hl lin">  167 </span>  <span class="hl com">/* Log into a separate logfile (not system log). */</span>
+<span class="hl lin">  168 </span>
+<span class="hl lin">  169 </span>  <span class="hl kwd">kutil_openlog</span><span class="hl opt">(</span>LOGFILE<span class="hl opt">);</span>
+<span class="hl lin">  170 </span>
+<span class="hl lin">  171 </span>  <span class="hl com">/* Actually parse HTTP document. */</span>
+<span class="hl lin">  172 </span>
+<span class="hl lin">  173 </span>  er <span class="hl opt">=</span> <span class="hl kwd">khttp_parse</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> valid_keys<span class="hl opt">,</span> VALID__MAX<span class="hl opt">,</span> 
+<span class="hl lin">  174 </span>    pages<span class="hl opt">,</span> PAGE__MAX<span class="hl opt">,</span> PAGE_HOME<span class="hl opt">);</span>
+<span class="hl lin">  175 </span>
+<span class="hl lin">  176 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span>er <span class="hl opt">!=</span> KCGI_OK<span class="hl opt">)</span>
+<span class="hl lin">  177 </span>    <span class="hl kwa">return</span> EXIT_FAILURE<span class="hl opt">;</span>
+<span class="hl lin">  178 </span>
+<span class="hl lin">  179 </span>  <span class="hl com">/* Necessary pledge for SQLite. */</span>
+<span class="hl lin">  180 </span>
+<span class="hl lin">  181 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio rpath cpath wpath flock fattr&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">) {</span>
+<span class="hl lin">  182 </span>    <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  183 </span>    <span class="hl kwa">return</span> EXIT_FAILURE<span class="hl opt">;</span>
+<span class="hl lin">  184 </span>  <span class="hl opt">}</span>
+<span class="hl lin">  185 </span>
+<span class="hl lin">  186 </span>  <span class="hl com">/*</span>
+<span class="hl lin">  187 </span><span class="hl com">   * Front line of defence: make sure we&apos;re a proper method, make</span>
+<span class="hl lin">  188 </span><span class="hl com">   * sure we&apos;re a page, make sure we&apos;re a JSON file.</span>
+<span class="hl lin">  189 </span><span class="hl com">   */</span>
+<span class="hl lin">  190 </span>
+<span class="hl lin">  191 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span>r<span class="hl opt">.</span>method <span class="hl opt">!=</span> KMETHOD_GET <span class="hl opt">&amp;&amp;</span> 
+<span class="hl lin">  192 </span>      r<span class="hl opt">.</span>method <span class="hl opt">!=</span> KMETHOD_POST<span class="hl opt">) {</span>
+<span class="hl lin">  193 </span>    <span class="hl kwd">http_open</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> KHTTP_405<span class="hl opt">);</span>
+<span class="hl lin">  194 </span>    <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  195 </span>    <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">  196 </span>  <span class="hl opt">}</span> <span class="hl kwa">else if</span> <span class="hl opt">(</span>r<span class="hl opt">.</span>page <span class="hl opt">==</span> PAGE__MAX<span class="hl opt">||</span> 
+<span class="hl lin">  197 </span>             r<span class="hl opt">.</span>mime <span class="hl opt">!=</span> KMIME_APP_JSON<span class="hl opt">) {</span>
+<span class="hl lin">  198 </span>    <span class="hl kwd">http_open</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> KHTTP_404<span class="hl opt">);</span>
+<span class="hl lin">  199 </span>    <span class="hl kwd">khttp_puts</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> <span class="hl str">&quot;Page not found.&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">  200 </span>    <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  201 </span>    <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">  202 </span>  <span class="hl opt">}</span>
+<span class="hl lin">  203 </span>
+<span class="hl lin">  204 </span>  r<span class="hl opt">.</span>arg <span class="hl opt">=</span> <span class="hl kwd">db_open</span><span class="hl opt">(</span>DATADIR <span class="hl str">&quot;/&quot;</span> DATABASE<span class="hl opt">);</span>
+<span class="hl lin">  205 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span>r<span class="hl opt">.</span>arg <span class="hl opt">==</span> NULL<span class="hl opt">) {</span>
+<span class="hl lin">  206 </span>    <span class="hl kwd">http_open</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> KHTTP_500<span class="hl opt">);</span>
+<span class="hl lin">  207 </span>    <span class="hl kwd">json_emptydoc</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  208 </span>    <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  209 </span>    <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">  210 </span>  <span class="hl opt">}</span>
+<span class="hl lin">  211 </span>
+<span class="hl lin">  212 </span>  <span class="hl kwa">if</span> <span class="hl opt">(</span>r<span class="hl opt">.</span>page <span class="hl opt">==</span> PAGE_HOME<span class="hl opt">) {</span>
+<span class="hl lin">  213 </span>    <span class="hl kwa">if</span> <span class="hl opt">(</span>r<span class="hl opt">.</span>cookiemap<span class="hl opt">[</span>VALID_SESS_ID<span class="hl opt">] !=</span> NULL <span class="hl opt">&amp;&amp;</span>
+<span class="hl lin">  214 </span>        r<span class="hl opt">.</span>cookiemap<span class="hl opt">[</span>VALID_SESS_TOKEN<span class="hl opt">] !=</span> NULL<span class="hl opt">)</span>
+<span class="hl lin">  215 </span>      us <span class="hl opt">=</span> <span class="hl kwd">db_sess_get_creds</span><span class="hl opt">(</span>r<span class="hl opt">.</span>arg<span class="hl opt">,</span> 
+<span class="hl lin">  216 </span>        r<span class="hl opt">.</span>cookiemap<span class="hl opt">[</span>VALID_SESS_TOKEN<span class="hl opt">]-&gt;</span>parsed<span class="hl opt">.</span>i<span class="hl opt">,</span>
+<span class="hl lin">  217 </span>        r<span class="hl opt">.</span>cookiemap<span class="hl opt">[</span>VALID_SESS_ID<span class="hl opt">]-&gt;</span>parsed<span class="hl opt">.</span>i<span class="hl opt">);</span>
+<span class="hl lin">  218 </span>    <span class="hl kwa">if</span> <span class="hl opt">(</span>us <span class="hl opt">==</span> NULL<span class="hl opt">) {</span>
+<span class="hl lin">  219 </span>      <span class="hl kwd">http_open</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> KHTTP_403<span class="hl opt">);</span>
+<span class="hl lin">  220 </span>      <span class="hl kwd">json_emptydoc</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  221 </span>      <span class="hl kwd">db_close</span><span class="hl opt">(</span>r<span class="hl opt">.</span>arg<span class="hl opt">);</span>
+<span class="hl lin">  222 </span>      <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  223 </span>      <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">  224 </span>    <span class="hl opt">}</span>
+<span class="hl lin">  225 </span>  <span class="hl opt">}</span>
+<span class="hl lin">  226 </span>
+<span class="hl lin">  227 </span>  <span class="hl kwa">switch</span> <span class="hl opt">(</span>r<span class="hl opt">.</span>page<span class="hl opt">) {</span>
+<span class="hl lin">  228 </span>  <span class="hl kwa">case</span> PAGE_HOME<span class="hl opt">:</span>
+<span class="hl lin">  229 </span>    <span class="hl kwd">sendhome</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> us<span class="hl opt">);</span>
+<span class="hl lin">  230 </span>    <span class="hl kwa">break</span><span class="hl opt">;</span>
+<span class="hl lin">  231 </span>  <span class="hl kwa">case</span> PAGE_LOGIN<span class="hl opt">:</span>
+<span class="hl lin">  232 </span>    <span class="hl kwd">sendlogin</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  233 </span>    <span class="hl kwa">break</span><span class="hl opt">;</span>
+<span class="hl lin">  234 </span>  <span class="hl kwa">case</span> PAGE_LOGOUT<span class="hl opt">:</span>
+<span class="hl lin">  235 </span>    <span class="hl kwd">sendlogout</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> us<span class="hl opt">);</span>
+<span class="hl lin">  236 </span>    <span class="hl kwa">break</span><span class="hl opt">;</span>
+<span class="hl lin">  237 </span>  <span class="hl kwa">default</span><span class="hl opt">:</span>
+<span class="hl lin">  238 </span>    <span class="hl kwd">abort</span><span class="hl opt">();</span>
+<span class="hl lin">  239 </span>  <span class="hl opt">}</span>
+<span class="hl lin">  240 </span>
+<span class="hl lin">  241 </span>  <span class="hl kwd">db_sess_free</span><span class="hl opt">(</span>us<span class="hl opt">);</span>
+<span class="hl lin">  242 </span>  <span class="hl kwd">db_close</span><span class="hl opt">(</span>r<span class="hl opt">.</span>arg<span class="hl opt">);</span>
+<span class="hl lin">  243 </span>  <span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">  244 </span>  <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">  245 </span><span class="hl opt">}</span>
+</pre>
+</body>
+</html>
+<!--HTML generated by highlight 3.49, http://www.andre-simon.de/-->

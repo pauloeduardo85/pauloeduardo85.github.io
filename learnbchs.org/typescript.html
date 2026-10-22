@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>BCHS//openradtool: typescript</title>
+		<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500,700" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="highlight.css" />
+		<link rel="stylesheet" href="kwebapp.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="BCHS//openradtool: typescript and javascript" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/typescript.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="Working with TypeScript in your openradtool application." />
+		<meta name="description" content="Working with TypeScript in your openradtool application." />
+	</head>
+	<body>
+		<section itemscope="itemscope" itemtype="http://schema.org/WebPage">
+			<nav class="subnav">
+				openradtool series:
+				<a href="kwebapp.html">introduction</a>, 
+				<a href="rbac.html">RBAC</a>,
+				<a href="auditing.html">role audits</a>,
+				<a href="translate.html">translation</a>,
+				<a href="typescript.html">TypeScript</a>
+			</nav>
+			<header>
+				<img itemprop="image" src="logo-blue.png" alt="BCHS Logo" />
+				<h1>
+					<a href="index.html" itemprop="name">BCHS</a>
+				</h1>
+				<nav>
+					<a href="tools.html"><span>tools</span></a>
+					<a href="easy.html"><span>example</span></a>
+					<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-github"></i></a>
+				</nav>
+			</header>
+			<article>
+				<section>
+					<p>
+						<a href="https://www.typescriptlang.org/">TypeScript</a>, if you haven't heard of it, is a way
+						of adding <i>types</i> to otherwise dynamically-typed JavaScript objects.
+						This allows developers to statically check for type violations (number vs. string, unknown
+						functions, nonexistence members, etc.) instead of resorting to painstaking run-time tests.
+					</p>
+					<pre class="prettyprint lang-javascript">/* Variables: */
+var foo; 
+/* versus the typed... */
+let foo: string; /* typed variable */
+
+/* And functions: */
+function bar(str, num) { return false; }
+/* versus the typed... */
+function bar(str: string, num: number): boolean { return false; }
+
+/* JavaScript?  Ok.  TypeScript? No. */
+bar(foo, foo);</pre>
+					<p>
+						Looks great, no?
+						Well, don't get too excited: there are some&#8230; down-sides.
+					</p>
+					<p>
+						The <code>tsc</code> <q>transpiler</q> translates the TypeScript to JavaScript, making sure that
+						types are consistent along the way.
+						On OpenBSD, the <code>tsc</code> utility must be indirectly installed from <code>npm</code>.
+						Let's grab it and make sure we also have our other tools.
+					</p>
+					<pre># pkg_add openradtool node
+# npm install typescript -g</pre>
+					<p>
+						I use <strong>-g</strong> as I'm usually building <a
+							href="https://man.openbsd.org/ports.7">ports(7)</a> of my software as a different user
+						that also needs the <code>tsc</code> executable.
+					</p>
+					<p>
+						This brings us to downside #1: the node package manager.
+						The least significant offense is that its installed components are not controlled by <a
+							href="https://man.openbsd.org/pkg_add">pkg_add(1)</a> and it pollutes <span
+							class="file">/usr/local/bin</span> with symbolic links.
+						So when you upgrade OpenBSD, you'll need to manually remove these links and reinstall the latest
+						node packages.
+						Furthermore, it's not clear to me whether <code>npm install</code> uses out-of-band version
+						information, resulting in the same OpenBSD version with different TypeScript installations.
+						Terrifying.
+						A solution is to bring the TypeScript module into <a
+							href="https://man.openbsd.org/ports.7">ports(7)</a> itself, but I'm yet to roll up my
+						sleeves for that one.
+					</p>
+					<p>
+						Anyway, TypeScript's typing offers more safety than plain JavaScript; and in the desert of
+						front-end development, any water is sacred.
+						Moreover, JavaScript and TypeScript can be mixed&#8212;the latter is just annotations to the
+						former&#8212;so it's easy to edge TypeScript into your application without a re-write.
+						For smaller systems, getting started with TypeScript usually involves more work with your <a
+							href="https://man.openbsd.org/make">Makefile</a> than anything else.
+					</p>
+					<p>
+						In this article, I talk about the role of TypeScript in a <a href="index.html">BCHS</a> ecosystem.
+						Let's sail the full <a href="https://kristaps.bsd.lv/openradtool">openradtool</a> armada to see where it
+						fits in, from configuration to client.
+					</p>
+					<p>
+						I will <strong>not</strong> talk about the JavaScript/TypeScript ecosystem of node modules and
+						dependencies, grunting, gulping, and other willy wonka.
+						We're going to keep it simple with some Makefiles.
+					</p>
+					<figure>
+						<img class="narrow" src="typescript-fig1.svg" alt="openradtool" />
+						<figcaption>
+							TypeScript chain from configuration to client.
+						</figcaption>
+					</figure>
+					<p>
+						But wait&#8212;why does <a href="https://kristaps.bsd.lv/openradtool">openradtool</a> deal with
+						JavaScript at all?  
+						What does C have to do with JavaScript?
+					</p>
+					<p>
+						Fact is, most modern web applications interact with the server via <a href="json.html">JSON</a>
+						and need to do something with the data.
+						And while your back-end might be beautifully chugging along, sandboxed and privilege separated, your
+						front-end is probably a seething mess of unverified, untyped, unstructured code running on your poor
+						clients' underpaid browsers.
+						Since  <a href="https://kristaps.bsd.lv/openradtool">openradtool</a> knows exactly about the structure
+						of your data, it can create a well-typed, meaningful interface to the data.
+					</p>
+					<h3>
+						getting started: javascript
+					</h3>
+					<p>
+						Let's fake up a quick configuration <span class="file">config.ort</span> for a
+						<code>client</code> structure consisting of the client's name (<code>name</code>), their date of
+						birth (<code>dob</code>), and the row identifier (<code>id</code>).
+						We'll add an accessor function for fetching these records by unique identifier.
+						All of this is documented in <a
+							href="https://kristaps.bsd.lv/openradtool/ort.5.html">ort(5)</a>.
+					</p>
+					<pre class="prettyprint">struct client {
+  field name text;
+  field dob epoch;
+  field id int rowid;
+  search id: name id;
+};</pre>
+					<p>
+						I assume that your back-end application, via
+						<a href="https://kristaps.bsd.lv/openradtool/ort-c-source.1.html">ort-c-source(1)</a> and
+						<a href="https://kristaps.bsd.lv/openradtool/ort-c-header.1.html">ort-c-header(1)</a>, is
+						already configured to return JSON documents in response to requests.
+						There's an example of this in the <a href="kwebapp.html">introduction</a> to the openradtool
+						series.
+						Let's call the application <code>app</code> and have its default page respond to the
+						<code>client-id</code> variable to return client record.
+					</p>
+					<p>
+						The plain JavaScript code generated by <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>
+						provides classes and methods for formatting <code>client</code> records returned from your application.
+						Let's put this into <span class="file">ort.js</span>.
+					</p>
+					<pre>% ort-javascript config.ort >ort.js</pre>
+					<p>
+						How does this JavaScript code work?
+						It takes JSON objects and fills in parts of the DOM tree as labelled by <code>class</code> attributes.
+					</p>
+					<pre class="prettyprint">&lt;DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;title&gt;Example&lt;/title&gt;
+    &lt;script src="ort.js"&gt;&lt;/script&gt;
+    &lt;script src="index.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id="client"&gt;
+      &lt;span class="client-name-text"&gt;&lt;/span&gt;:
+      &lt;input type="date" class="client-dob-date-text" /&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+					<p>
+						This, according to the <a href="typescript-docs/ort.client.html">documentation</a>, will fill the client's name as text under the element with
+						<code>client-name-text</code> and the ISO-8601 date under <code>client-dob-date-text</code>.
+						In our front-end code, we can fetch the client's JSON object with the following simplified code.
+						(If you're using a framework, there probably exist other ways of doing this.)
+						Let's assume your application is in <code>/cgi-bin</code> and put this in <span
+							class="file">index.js</span>.
+					</p>
+					<pre class="prettyprint lang-javascript">function init() {
+  var xmh = new XMLHttpRequest();
+  xmh.onreadystatechange = function(){
+    var v = xmh.responseText;
+    if (xmh.readyState === 4 && xmh.status === 200) {
+      var obj = JSON.parse(v);
+      var e = document.getElementById('client');
+      new ort.client(obj).fill(e);
+    }
+  };
+  xmh.open('GET', '/cgi-bin/app?client-id=123', true);
+  xmh.send();
+}</pre>
+					<p>
+						That's it.
+						The interface exported by  <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>
+						should give you enough tools to at least get started with your application.
+						But first&#8212;let's make it run when the page loads by putting this in the same file.
+					</p>
+					<pre class="prettyprint lang-javascript">window.onload = init;</pre>
+					<p>
+						In general, I'll bundle each HTML page's JavaScript requirements into one instead of using the
+						magic bundling tools within the JavaScript ecosystem.
+						So I'll concatenate my <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>
+						output with a set of generic functions (such as the above for making the AJAX request) and
+						per-page logic (invoking the server and <code>fill</code> methods).
+					</p>
+					<pre class="prettyprint lang-make">index.dist.js: index.js ort.js
+  cat index.js ort.js >$@</pre>
+					<p>
+						For the per-page logic, I'll use <q>module patterns</q> to make sure that all can be combined
+						into a single file without namespace collisions.
+						(This is also a good place to use <code>jsmin</code>, if it's installed.)
+						This prioritises simplicity (one file per HTML page) over bandwidth considerations, where the
+						client may be able to cache divisible components.
+						Make it a point to use the <q>module pattern</q> to prevent concatenated functions from
+						clobbering each other:
+					</p>
+					<pre class="prettyprint lang-javascript">'use strict';
+var index;
+(function (index) {
+  function init() {
+    /* From above. */
+  }
+})(index || (index = {}));
+window.addEventListener('load', index.init);
+</pre>
+					<p>
+						But wait&#8230; while our C code uses the best practises to be correct and guaranteed, how do we
+						know that the generated JavaScript is correct?
+						Or that we're correct in working with it?
+						That's where TypeScript comes in handy.
+					</p>
+					<h3>
+						typescript output
+					</h3>
+					<p>
+						As of the last few versions (since version 0.5.0 or so), <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>
+						can also output TypeScript.
+						This TypeScript is functionally equivalent to the JavaScript: when compiled, it produces the
+						same (or functionally similar) code.
+					</p>
+					<p>
+						If you want to use the TypeScript code, simply pass the <b>-t</b> flag and use the
+						<code>tsc</code> utility to <q>transpile</q> your sources into JavaScript.
+						There are many ways of doing this, depending upon how much one wants to use the <a
+							href="https://www.npmjs.com/">npm</a> environment.
+						I personally don't use it at all: for each page, I compile a single JavaScript file from all of
+						its dependencies.
+					</p>
+					<pre class="prettyprint lang-make">index.dist.js: index.ts ort.ts
+  tsc --strict --outFile $@ index.ts ort.ts</pre>
+					<p>
+						If I have an external JavaScript component I use (such as <a
+							href="https://momentjs.com/">moment.js</a>), I keep the latest stable code in a
+						subdirectory, install it with my build components, and refer to its TypeScript <q>.d.ts</q>
+						synopsis with the <code>&lt;reference path&gt;</code> construct.
+						Let's return to our <code>init</code> method.
+					</p>
+					<pre class="prettyprint lang-javascript">namespace index {
+  export function init(): void {
+    let xmh: XMLHttpRequest = new XMLHttpRequest();
+    xmh.onreadystatechange = function(){
+      let v: string = xmh.responseText;
+      if (xmh.rekadyState === 4 && xmh.status === 200) {
+        let obj: ort.clientData;
+        let e: HTMLElement|null;
+        obj = &lt;ort.clientData&gt;JSON.parse(v);
+        e = document.getElementById('client');
+        new ort.client(obj).fill(e);
+      }
+    };
+    xmh.open('GET', '/cgi-bin/app?client-id=123', true);
+    xmh.send();
+  }
+}
+window.addEventListener('load', index.init);</pre>
+					<p>
+						There is one bothersome missing components in this sequence: we should have a wrapper safely
+						converting from <code>JSON.parse</code> and our interfaces.
+						I'll leave this in the area of future work.
+					</p>
+					<p>
+						We all agree that type safety is excellent.
+						But now on to the bad news&#8212;yes, it's worse than the node package manager.
+					</p>
+					<pre>% time tsc --strict --outFile index.js index.ts
+    0m02.97s real     0m04.58s user     0m01.13s system</pre>
+					<p>
+						Take a look at that again.
+						Look above at our index function.
+						Look again at that.
+						That's 3 seconds.
+						<i>Seconds</i>.
+						That's a four-core machine with 4 GB RAM.
+						3.  Seconds.
+						I won't say anything more.
+						I want to.
+						But I won't.
+					</p>
+					<p>
+						Moral of the story?
+						TypeScript is an excellent way to enforce a type contract between you and your code.
+						And openradtool helps front-end developers by having a type-enforced API to its data kept in
+						tune with the configuration.
+						But using TypeScript instead of JavaScript incurs a steep compile-time performance hit.
+					</p>
+					<h3>
+						documentation
+					</h3>
+					<p>
+						The outputs of 
+						<a href="https://kristaps.bsd.lv/openradtool/ort-c-source.1.html">ort-c-source(1)</a> and
+						<a href="https://kristaps.bsd.lv/openradtool/ort-c-header.1.html">ort-c-header(1)</a> are
+						all well-documented, of course.
+						The same goes with the JavaScript or TypeScript output of 
+						<a href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>.
+						It uses the jsdoc syntax, and strives to document all the tools and members available to
+						front-end developers.
+					</p>
+					<p>
+						To generate documentation, you'll also need the <code>jsdoc</code> utility available via
+						<code>npm</code>.
+						See the disclaimer above about the node package manager, of course.
+					</p>
+					<pre># npm install jsdoc -g</pre>
+					<p>
+						Assuming that we're built to handle TypeScript (<code>jsdoc</code> doesn't directly handle
+						TypeScript), use the following.
+						Of course, we can always just split the TypeScript to JavaScript generation into its own.
+					</p>
+					<pre class="prettyprint lang-make">out: ort.ts
+  tsc --outFile ort.ts.js ort.ts
+  jsdoc -d $@ ort.ts.js
+  touch $@
+  rm -f ort.ts.js</pre>
+					<p>
+						The <code>client</code> JavaScript documentation for our examples is available as <a
+							href="typescript-docs/index.html">typescript-docs/index.html</a>.
+						I consider the documentation aspect of <a
+							href="https://kristaps.bsd.lv/openradtool">openradtool</a> to be one of its most
+						powerful features.
+						If you can think of any way to improve this&#8212;let me know.
+					</p>
+					<h3>
+						acknowledgements
+					</h3>
+					<p>
+						I'd like to thank CAPEM Solutions, Inc., for funding this development and agreeing that it bests
+						serves the community as open source.
+					</p>
+				</section>
+			</article>
+			<footer>
+				<div>
+					<a href="https://creativecommons.org/licenses/by/4.0/"><i class="fa fa-creative-commons"></i></a> 
+					<a rel="author" href="https://kristaps.bsd.lv">Kristaps Dzonsons</a>
+				</div>
+			</footer>
+		</section>
+	</body>
+</html>
+

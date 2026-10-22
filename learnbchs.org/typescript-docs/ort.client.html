@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: client</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: client</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2><span class="attribs"><span class="type-signature"></span></span>
+            <span class="ancestors"><a href="ort.html">ort</a>.</span>client<span class="signature">(obj)</span><span class="type-signature"></span></h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+
+    
+    <h4 class="name" id="client"><span class="type-signature"></span>new client<span class="signature">(obj)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Accepts <a href="ort.clientData.html">ort.clientData</a> for writing into a DOM tree.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.clientData.html">ort.clientData</a></span>
+|
+
+<span class="param-type">Array.&lt;<a href="ort.clientData.html">ort.clientData</a>></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The object(s) to 
+write.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line426">line 426</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fill"><span class="type-signature"></span>fill<span class="signature">(e, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Write the <a href="ort.clientData.html">ort.clientData</a> into the given HTMLElement in 
+the DOM tree.
+If constructed with an array, the first element is used.
+Elements within (and including) "e" having the following 
+classes are manipulated as follows:
+<ul>
+<li>client-name-enum-select: sets the <code>select</code> 
+attribute for <code>&lt;option&gt;</code> values matching 
+<i>name</i> under the element</li>
+<li>client-name-value-checked: sets the <code>checked</code> 
+attribute under the element matching the input</li>
+<li>client-name-text: replace contents with <i>name</i> 
+data</li>
+<li>client-name-value: replace <code>value</code> attribute 
+with <i>name</i> data</li>
+<li>client-dob-enum-select: sets the <code>select</code> 
+attribute for <code>&lt;option&gt;</code> values matching 
+<i>dob</i> under the element</li>
+<li>client-dob-value-checked: sets the <code>checked</code> 
+attribute under the element matching the input</li>
+<li>client-dob-text: replace contents with <i>dob</i> 
+data</li>
+<li>client-dob-value: replace <code>value</code> attribute 
+with <i>dob</i> data</li>
+<li>client-dob-date-value: set the element's 
+<code>value</code> to the ISO-8601 date format of the 
+data</li>
+<li>client-dob-date-text: like client-dob-date-value, but 
+replacing contents
+<li>client-id-enum-select: sets the <code>select</code> 
+attribute for <code>&lt;option&gt;</code> values matching 
+<i>id</i> under the element</li>
+<li>client-id-value-checked: sets the <code>checked</code> 
+attribute under the element matching the input</li>
+<li>client-id-text: replace contents with <i>id</i> data</li>
+<li>client-id-value: replace <code>value</code> attribute with 
+<i>id</i> data</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional dictionary of 
+functions keyed by structure and field name (e.g., <i>foo</i> 
+structure, <i>bar</i> field would be <code>foo-bar</code>). 
+The value is a function for custom handling that accepts the 
+"e" value, the name of the structure-field, and the value of 
+the structure and field.
+You may also specify an array of functions instead of a 
+singleton.
+These callbacks are invoked <b>after</b> the generic classes 
+are filled.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line432">line 432</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillArray"><span class="type-signature"></span>fillArray<span class="signature">(e, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fill">ort.client#fill</a> but for an array of <a href="ort.clientData.html">ort.clientData</a>.
+If the data is not an array, it is remapped as an array of 
+one.
+This will save the first element within "e", remove all 
+children of "e", then repeatedly clone the saved element and 
+re-append it, filling in the cloned subtree with the array 
+(inclusive of the subtree root).
+If the input array is empty or null, "e" is hidden by using 
+the <code>hide</code> class.
+Otherwise, the <code>hide</code> class is removed.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a>).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line659">line 659</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillArrayByClass"><span class="type-signature"></span>fillArrayByClass<span class="signature">(e, name, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fillArray">ort.client#fillArray</a> but instead of accepting a 
+single element to fill, filling all elements by class name 
+beneath the given root (non-inclusive).
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the class into which to 
+fill.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a> for details).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line709">line 709</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillArrayOrHide"><span class="type-signature"></span>fillArrayOrHide<span class="signature">(e, tohide, o, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fillArray">ort.client#fillArray</a>, but hiding an element if 
+the array is empty or null.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+|
+
+<span class="param-type">null</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tohide</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+|
+
+<span class="param-type">null</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element to hide.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>o</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.clientData.html">ort.clientData</a></span>
+|
+
+<span class="param-type">Array.&lt;<a href="ort.clientData.html">ort.clientData</a>></span>
+|
+
+<span class="param-type">null</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array 
+(or object) to fill.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a>).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line601">line 601</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillArrayOrShow"><span class="type-signature"></span>fillArrayOrShow<span class="signature">(e, toshow, o, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fillArray">ort.client#fillArray</a>, but showing an element if 
+the array is empty or null.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+|
+
+<span class="param-type">null</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>toshow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+|
+
+<span class="param-type">null</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element to show.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>o</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.clientData.html">ort.clientData</a></span>
+|
+
+<span class="param-type">Array.&lt;<a href="ort.clientData.html">ort.clientData</a>></span>
+|
+
+<span class="param-type">null</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array 
+(or object) to fill.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a>).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line630">line 630</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillByClass"><span class="type-signature"></span>fillByClass<span class="signature">(e, name, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fill">ort.client#fill</a> but instead of accepting a single 
+element to fill, filling into all elements (non-inclusive) 
+matching the given class name beneath (non-inclusive) the 
+given root.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the class into which to 
+fill.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a> for details).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line490">line 490</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillInner"><span class="type-signature"></span>fillInner<span class="signature">(e, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fill">ort.client#fill</a> but not including the root 
+element "e".
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a> for details).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line524">line 524</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fillInnerByClass"><span class="type-signature"></span>fillInnerByClass<span class="signature">(e, name, custom)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Like <a href="ort.client.html#fillByClass">ort.client#fillByClass</a> but inclusive the root and 
+targets by class.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the class into which to 
+fill.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>custom</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ort.DataCallbacks.html">ort.DataCallbacks</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The optional custom 
+handler dictionary (see <a href="ort.client.html#fill">ort.client#fill</a> for details).</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="typescript.js.html">typescript.js</a>, <a href="typescript.js.html#line508">line 508</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="ort.html">ort</a></li></ul><h3>Classes</h3><ul><li><a href="ort.client.html">client</a></li></ul><h3>Interfaces</h3><ul><li><a href="ort.clientData.html">clientData</a></li><li><a href="ort.DataCallbacks.html">DataCallbacks</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.2</a> on Mon May 11 2020 09:50:52 GMT-0500 (GMT-05:00)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

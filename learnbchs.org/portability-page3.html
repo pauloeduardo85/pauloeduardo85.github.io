@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>BCHS//portability: continuous integration</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500,700" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="highlight.css" />
+		<link rel="stylesheet" href="portability.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="BCHS//portability: continuous integration" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/portability-page3.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="Portability and continuous integration for BSD.lv" />
+		<meta name="description" content="Portability and continuous integration for BSD.lv" />
+	</head>
+	<body>
+		<section itemscope="itemscope" itemtype="http://schema.org/WebPage">
+			<nav id="mainnav">
+				<div>
+					<span>Porting series</span>:
+					<span class="link"><a href="portability.html">intro</a></span>
+					<span class="link"><a href="portability-page2.html">config</a></span>
+					<span class="link"><a href="portability-page3.html">testing</a></span>
+				</div>
+			</nav>
+			<header id="mainhead">
+				<img itemprop="image" src="logo-blue.png" alt="BCHS Logo" />
+				<h1>
+					<a href="index.html" itemprop="name">BCHS</a>
+				</h1>
+				<nav>
+					<a href="tools.html"><span>tools</span></a>
+					<a href="easy.html"><span>example</span></a>
+					<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-github"></i></a>
+				</nav>
+			</header>
+			<article id="article">
+				<header>
+					<p class="intro">
+						You have a dozen systems and aim to port software to all of them.
+						How to you make sure that your porting efforts work on all systems?
+						Let's play portability whack-a-mole!
+					</p>
+					<figure id="portability-fig9">
+						<img src="portability-fig9.jpg" />
+					</figure>
+					<p>
+						This section of the <a href="portability.html">portability</a> series introduces how developing
+						<a href="https://github.com/kristapsdz/minci">minci</a>
+						helped us keep on top of portability across all systems.
+						Building <a href="https://github.com/kristapsdz/minci">minci</a> was a straight-forward choice
+						based upon our needs and the complexity of other available tools, but either way you're going to
+						need some sort of machinery to verify that your continued portability efforts doesn't cause
+						fallout on other systems.
+					</p>
+					<p>
+						This is especially true with umbrella systems, such as Linux distributions or SunOS derivatives,
+						where portability measures for a target umbrella cause fallout for specific systems in that umbrella.
+					</p>
+				</header>
+			</article>
+			<article>
+				<section>
+					<h2>why continuous integration</h2>
+					<p>
+						With the continued development and integration of
+						<a href="https://github.com/kristapsdz/oconfigure">oconfigure</a> underway, I soon ran into
+						problems where one portability measure (e.g., adding <code>_DEFAULT_SOURCE</code> on a glibc
+						Linux for including <a href="https://man.openbsd.org/crypt.3">crypt(3)</a>) would cause fallout
+						on other systems.  In this example, because <code>_XOPEN_SOURCE</code> had already been defined,
+						and conflicted with the new define.
+					</p>
+					<p>
+						I needed a tool for making sure commits on the current focus were not causing fallout on other
+						already-ported systems.
+						With only one other system, I could keep both open in terminals.
+						As that number grew, it became impractical.
+						This is where CI (<q>continuous integration</q>) tools are handy for verifying&#8230;
+					</p>
+					<ul>
+						<li>
+							<strong>compilation</strong>: that the source code compiles and links (catches missing
+							functions and required libraries, feature tests, &#8230;);
+						</li>
+						<li>
+							<strong>regressions</strong>: run-time testing of the system in motion (catches
+							alignment issues, different function behaviour, &#8230;); and
+						</li>
+						<li>
+							<strong>distribution</strong>: assets bundled with the distributed system are sufficient
+							for building, regressions, and installation (checks forgotten assets).
+						</li>
+					</ul>
+					<p class="important">
+						<strong>Searching for CI tools produced lots of useless information</strong>.
+						It's a <q>buzzword</q> and results were heavily skewed toward heavy-weight vendors.
+						I'm sure there are many high-quality, light-weight systems hidden in the results, but I couldn't
+						find any.
+					</p>
+					<p>
+						In the end, it seemed like a much simpler task to simply write one myself.
+						At heart a CI tool consists of a <i>test runner</i>, which verifies for a single host; and the
+						<i>report server</i>, which manages the reports of test runners.
+						A test runner for BSD.lv tools would need only:
+					</p>
+					<ol>
+						<li>freshen sources</li>
+						<li>configure sources (run <code>configure</code>)</li>
+						<li>build and test regressions and distribution (run <code>make</code> with various rules)</li>
+						<li>report success or failure to the server</li>
+					</ol>
+					<p>
+						The server would need only:
+					<ol>
+						<li>collect reports</li>
+						<li>display reports</li>
+					</ol>
+					<p>
+						In the end, this was accomplished with a shell script, an
+						<a href="https://kristaps.bsd.lv/openradtool">openradtool</a> data model, some driver code, and
+						some nice CSS.
+					</p>
+				</section>
+			</article>
+			<article>
+				<section>
+					<h2>building a continuous integratationator</h2>
+					<p>
+						I ended (but am starting here) with the report server.  The report server handles the set of
+						test reports, which it must accept and produce.  Each report consists of:
+					</p>
+					<ul>
+						<li>what software was tested</li>
+						<li>what system it was run on</li>
+						<li>when stages of freshing, configuring, and building finished (or not)</li>
+						<li>identify of the tester</li>
+					</ul>
+					<p>
+						For simplicity, I combined the accept and produce functionality into one tool backed by
+						<a href="https://kristaps.bsd.lv/openradtool">openradtool</a>.
+						Reports are accepted over a simple HTTP <strong>POST</strong> and produced in HTML5 from an HTTP
+						<strong>GET</strong> from the same CGI resource.
+					</p>
+					<figure>
+						<img src="portability-fig10.svg" />
+						<figcaption>Interaction of runners, sources, and the report server.</figcaption>
+					</figure>
+					<p>
+						The data model is described in
+						<a href="https://github.com/kristapsdz/minci/blob/master/db.ort">db.ort</a>
+						and the back-end driver in
+						<a href="https://github.com/kristapsdz/minci/blob/master/main.c">main.c</a>.
+						The driver both accepts reports and formats them in HTML.
+						The rest is just CSS.
+					</p>
+					<p>
+						For the test runner, I opted for a simple POSIX shell script,
+						<a href="https://github.com/kristapsdz/minci/blob/master/minci.sh">minci.sh</a>.
+						So far this has worked fine on all target systems, with some snags along the way in portable
+						idioms for UNIX tools, e.g., <code>head -n1</code> vs. <code>head -1</code> or 
+						<code>echo -n</code> vs. <code>printf</code>.
+						I have the HTTP <strong>POST</strong> component be handled by
+						<a href="https://curl.haxx.se">curl</a>, which is available on all systems I use&#8212;often as
+						part of the base system.
+					</p>
+					<figure>
+						<img src="portability-fig11.svg" />
+						<figcaption>Test runner sequence.</figcaption>
+					</figure>
+					<p>
+						The BSD.lv tools are all mirrored from a local CVS repository to 
+						<a href="https://github.com/kristapsdz">GitHub</a>, making it easy to fetch sources from one
+						location.
+						The reason for using <a href="https://git-scm.com">git(1)</a> instead of 
+						<a href="https://man.openbsd.org/cvs.1">cvs(1)</a> via <code>anoncvs</code> is the concept of a
+						source tree identified by the last commit.
+						This way, if any two source trees have the same last-commit identifier, they're identical.
+						CVS doesn't have this concept, so tracking the same source trees is more difficult.
+						The <a href="https://github.com/kristapsdz/minci/blob/master/minci.sh">minci.sh</a> test runner
+						uses this identifier to check whether sources need to be updated and re-checked.
+					</p>
+					<p>
+						The test runner runs periodically via 
+						<a href="https://man.openbsd.org/crontab.1">crontab(1)</a>.
+						This introduces a delay in testing sources, but this is at best a minor inconvenience.
+						Most heavy-weight continuous integration tools are triggered on each commit, but I considered
+						this unnecessary complexity.
+					</p>
+					<p>
+						Instead of relying on complicated usernames and passwords, the test runner identifies itself
+						with an email address and shared secret token (hashed in the <strong>POST</strong> submission)
+						in its configuration file.
+						Very straightforward and very effective.
+						Adding a new tester to the database is as simple as generating a token and assigning that to an
+						e-mail address.
+					</p>
+					<h3>local test-runner configuration</h3>
+					<p>
+						Since the BSD.lv tools have been fitted to use
+						<a href="https://man.openbsd.org/pkg-config.1">pkg-config(1)</a>
+						for detecting libraries, it's easy for the test runner user to override system libraries, which
+						might be out of date, with those installed locally.
+						The user need only set <code>PKG_CONFIG_PATH</code> to where the package specification files are
+						found.
+						This comes particularly in handy for downloading <a href="https://libressl.org">LibreSSL</a>
+						or newer version of <a href="https://openssl.org">OpenSSL</a>.
+						For systems like
+						<a href="https://kristaps.bsd.lv/kcaldav">kcaldav</a>, I was also able to use this for local
+						versions of <a href="https://kristaps.bsd.lv/kcgi">kcgi</a> when it wasn't available from a
+						system's third-party package manager.
+					</p>
+					<p>
+						At present, there's no automated way to deploy dependencies for the test runners: they must be
+						manually installed.
+						As I introduce more inter-depending systems (like 
+						<a href="https://kristaps.bsd.lv/kcaldav">kcaldav</a>), this will probably change.
+					</p>
+					<p>
+						The last feature added to the test runner was an auto-update, which works much in the same way
+						as the other parts checking for source freshness.
+						Auto-updating isn't a long-term feature, but is perfect for <i>in situ</i> updates as I flesh
+						out the continuous integration tool itself.
+					</p>
+				</section>
+			</article>
+			<article>
+				<section>
+					<h2>results and future work</h2>
+				</section>
+				<p>
+					With continuous integration in place on all platforms, I'm free to make changes to individual
+					repositories knowing that within an hour or so, I can see whether the changes have affected on
+					platforms.
+				</p>
+				<p>
+					You can see the results for the BSD.lv tools in action at
+					<a rel="nofollow" href="https://kristaps.bsd.lv/cgi-bin/minci.cgi">kristaps.bsd.lv/cgi-bin/minci.cgi</a>.
+				</p>
+				<p>
+					One unexpected (but excellent) result of <a href="https://github.com/kristapsdz/minci">minci</a> is that
+					it puts more pressure on me to provide regression tests.
+					This is specific to the SPARC64 hardware: it demonstrates that standard operation of my tools don't have
+					hidden alignment issues.
+					Since starting this continuous integration, I've added dozens of regression tests to
+					<a href="https://github.com/kristapsdz/oconfigure">oconfigure</a>,
+					<a href="https://kristaps.bsd.lv/kcgi">kcgi</a>, and even
+					<a href="https://kristaps.bsd.lv/kcaldav">kcaldav</a>.
+				</p>
+				<p>
+					For future work, I'll add a notification tool for the report server.
+					The idea is to store a token of the last check time, run a check on reports since then that have passed
+					or failed, then pass these along to a script such as
+					<a href="https://man.openbsd.org/hotplugd">hotplugd(8)</a> or other tools do.
+					This way, I needn't actually check the reports dashboard, and just wait for an e-mail if updates have
+					failed on any systems.
+				</p>
+			</article>
+		</section>
+		<footer>
+			<a href="https://creativecommons.org/licenses/by/4.0/"><i class="fa fa-creative-commons"></i></a> 
+			<a rel="author" href="https://github.com/kristapsdz">kristapsdz</a>
+		</footer>
+	</body>
+</html>

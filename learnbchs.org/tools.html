@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>BCHS: tools</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="tools.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="BCHS: know your tools" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/tools.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="Tools and methods for your BCHS application." />
+		<meta name="description" content="Tools and methods for your BCHS application." />
+		<script>
+			function changeEventHandler(event) {
+				if (null !== event.target.value)
+					if (event.target.value.length)
+						location.href = '#sec-' + event.target.value;
+			}
+			document.addEventListener('DOMContentLoaded', function() {
+				'use strict';
+				var e;
+				e = document.getElementById('nav-select');
+				if (null !== e)
+					e.onchange = changeEventHandler;
+			}, false);
+
+		</script>
+	</head>
+	<body>
+		<section itemscope="itemscope" itemtype="http://schema.org/WebPage">
+			<header>
+				<div>
+					<a href="index.html">
+						<img itemprop="image" src="logo-white.png" alt="BCHS Logo" id="logo" />
+					</a>
+				</div>
+				<h1>
+					<a href="index.html">BSD, C, httpd, SQLite</a>
+				</h1>
+				<nav>
+					<div>
+						Navigate: <a href="index.html">home</a>, <span>tools</span>, <a href="easy.html">example</a>
+					</div>
+					<div>
+						<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-fw fa-github"></i></a>
+						<a href="report/index.html"><i class="fa fa-fw fa-server"></i></a>
+					</div>
+				</nav>
+			</header>
+			<article id="intro">
+				<div class="desktop">
+					<div class="subnav">
+						<nav>
+							Jump to:
+							<span><a href="#sec-c">C</a></span>
+							<span><a href="#sec-cgi">Fast/CGI</a></span>
+							<span><a href="#sec-security">Security</a></span>
+							<span><a href="#sec-sqlite">SQLite</a></span>
+							<span><a href="#sec-testing">Testing</a></span>
+							<span><a href="#sec-docs">Docs</a></span>
+						</nav>
+					</div>
+				</div>
+				<div class="mobile">
+					<div class="subnav">
+						<select id="nav-select">
+							<option value="">Jump to&#8230;</option>
+							<option value="c">C</option>
+							<option value="cgi">Fast/CGI</option>
+							<option value="security">Security</option>
+							<option value="sqlite">SQLite</option>
+							<option value="testing">Testing</option>
+							<option value="docs">Docs</option>
+						</select>
+					</div>
+				</div>
+				<pre>% <a href="https://man.openbsd.org/vi.1">vi</a> main.c</pre>
+				<p>
+					You've deployed BCHS.
+					Your editor is open.
+					<span class="main">Where do you begin</span>?
+				</p>
+			</article>
+			<article id="data">
+				<section id="sec-c">
+					<h2>
+						write portable and secure c
+					</h2>
+					<p>
+						Anybody can write crappy, bug-ridden and insecure code. In any language.
+						Good news: with C, it's even easier!
+						So familiarise yourself with common (and common-sense) pitfalls noted in the <a
+							href="https://www.securecoding.cert.org/confluence/display/c/SEI+CERT+C+Coding+Standard">SEI
+							CERT C coding standard</a> and <a href="http://www.c-faq.com/">comp.lang.c FAQ</a>.
+						When compiling, <code>-W -Wall -Wextra -g -O0</code> should be standard: lots of warnings,
+						symbols for if (when) your application crashes, and disabled optimisation to make the back
+						traces readable.
+					</p>
+					<p>
+						To encourage sharing, consider <a href="https://man.openbsd.org/style.9">style(9)</a> as a guide
+						for the style of your C code.
+						It makes a significant difference when bringing on victims<code>^W</code>fellow programmers!
+					</p>
+					<p>
+						Also consider portability: the more operating systems where your code works, the more folks
+						you'll have using it.
+						Consider using <a href="https://github.com/kristapsdz/oconfigure">oconfigure</a> or similar to
+						easily add safe OpenBSD functions (<a href="https://man.openbsd.org/strlcpy">strlcpy</a>, <a
+							href="Https://man.openbsd.org/strtonum">strtonum</a>, &#8230;) to any operating system.
+					</p>
+					<p>
+						There's a great deal more one can say here, but neither of us have time for a book.
+						If you're on OpenBSD, it's trivial to safe-guard your C applications with <a
+							href="https://man.openbsd.org/pledge">pledge(2)</a> and <a
+							href="https://man.openbsd.org/pledge">unveil(2)</a>.
+						For portability, these can be conditional depending upon oconfigure.
+						On other systems, you'll have a much harder time navigating the security mechanisms, so OpenBSD
+						is a good place to start.
+					</p>
+				</section>
+				<section id="sec-cgi">
+					<h2>
+						be familiar with <a href="https://tools.ietf.org/html/rfc3875">cgi</a> and <a
+							href="http://www.fastcgi.com/devkit/doc/fcgi-spec.html">fastcgi</a>
+					</h2>
+					<p>
+						If you don't want to parse content by hand&#8212;and you really, really don't&#8212;let a
+						library do it for you.
+						Install and use <a href="https://kristaps.bsd.lv/kcgi">kcgi</a>, 
+						<a href="https://kore.io/">kore</a>, or basic <a
+							href="http://www.fastcgi.com/">fcgi</a> from <a
+							href="https://www.openbsd.org/faq/faq15.html">packages</a>.
+					</p>
+					<p>
+						Even with a library handling your CGI and FastCGI parsing, you must still be knowledgeable of
+						HTTP topics such as error codes (e.g., 301, 302, or 307 for redirects?), secure HTTP headers
+						(e.g., those espoused by <a
+							href="https://www.owasp.org/index.php/OWASP_Secure_Headers_Project">OWASP</a>), and most
+						mystically, browser caching.
+					</p>
+					<p>
+						<strong>Caveat emptor</strong> on FastCGI.
+						Be careful!
+						CGI scripts run by <a
+							href="https://man.openbsd.org/OpenBSD-current/man8/slowcgi.8">slowcgi(8)</a>
+						already have their privileges dropped and file-system constrained.  
+						With FastCGI, you'll need to use a framework that does so for you!
+						There's certainly a speed boost in using FastCGI, but make sure it does not impair your
+						application's security.
+					</p>
+				</section>
+				<section id="sec-security">
+					<h2>
+						know your security tools
+					</h2>
+					<p>
+						OpenBSD has <a href="https://man.openbsd.org/pledge.2">pledge(2)</a>.
+						<q>Embrace the pledge.</q>
+						And even better: <a href="https://man.openbsd.org/unveil.2">unveil(2)</a>.
+						These functions are incredibly useful in creating a secure environment without elaborate
+						frameworks in place.
+					</p>
+					<p>
+						Your application will be under assault every moment it's running.
+						And it will have bugs: limit the damage caused by inevitable mistakes by
+						constraining (sandboxing) the environment available to your application.
+						Oh, right: there's also
+						<a href="https://man.openbsd.org/OpenBSD-current/man2/chroot.2">chroot(2)</a>,
+						dropping privileges, etc&#8230;
+					</p>
+					<p>
+						For more on these security tools, see <a
+							href="https://kristaps.bsd.lv/absdcon2017/">Secure CGI</a>.
+					</p>
+				</section>
+				<section id="sec-sqlite">
+					<h2>
+						databases: simplicity rules
+					</h2>
+					<p>
+						Spend time carefully reading through the <a href="https://sqlite.org">SQLite</a> documentation.
+						For a simpler API (and some significant security features), consider using <a
+							href="https://kristaps.bsd.lv/ksql">ksql</a> or
+						<a href="https://kristaps.bsd.lv/sqlbox">sqlbox</a>.
+						Most folks knee-jerk into needing the biggest Oracle or NoSQL database they can find.
+						But for most applications, it's perfectly alright to start with SQLite and
+						vanilla SQL, then slowly expand as necessary.
+						The usual path is from SQLite to <a href="https://www.postgresql.org/">PostgreSQL</a>.
+					</p>
+					<p>
+						If you don't fancy writing raw SQLite, there's always 
+						<a href="https://sqlitebrowser.org/">sqlitebrowser</a> and
+						<a href="https://www.calligra.org/kexi/">kexi</a>, both available as packages.
+					</p>
+				</section>
+				<section id="sec-testing">
+					<h2>
+						testing
+					</h2>
+					<h3>
+						static source
+					</h3>
+					<p>
+						Statically scan your binary with <a href="http://www.llvm.org/">LLVM</a>
+						(from <a href="https://www.openbsd.org/faq/faq15.html">packages</a>: the base system does not
+						bundle with the scan-build utility).
+						There's also <a href="http://www.frama-c.com/">frama-c</a> and <a
+							href="http://www.splint.org/">splint</a>, both also in packages, but I haven't used
+						either.
+					</p>
+					<p>
+						These static analysis tools can help catch source-level bugs.
+						An alternative compiler (clang vs. gcc) can also prevent you from relying too much on 
+						compiler-specific extensions, which otherwise reduces portability.
+					</p>
+					<p>
+						If your project is open source, you can register it with <a
+							href="https://www.coverity.com">Coverity</a>, too.
+					</p>
+					<p>
+						Model checking is a technique currently espoused by security researchers, but I don't have any
+						practical experience with model checking in C.
+					</p>
+					<h3>
+						run-time
+					</h3>
+					<p>
+						Run your application under <a href="http://valgrind.org/">valgrind</a> (from <a
+							href="https://www.openbsd.org/faq/faq15.html">packages</a>) and make sure your <a
+							href="https://man.openbsd.org/malloc">malloc(3)</a> system flags are unforgiving.
+						The status of valgrind on OpenBSD is uncertain, so this is one reason I make sure a portable
+						version of my software exists: running valgrind on other systems.
+					</p>
+					<p>
+						Memory errors are often the subtlest (next to race conditions, maybe).
+						Use these tools as much as possible to catch any run-time issues that can't be
+						ferreted with static analysis tools.
+					</p>
+					<p>
+						For your database, there's always tools like <a href="http://sqlmap.org/">sqlmap</a> to check
+						your database connections.
+						Of course, since you're using prepared parameters, this shouldn't be an issue.
+						Right?
+					</p>
+					<h3>
+						fuzziness
+					</h3>
+					<p>
+						Parsing data?
+						Push your parsers into libraries and use <a
+							href="http://lcamtuf.coredump.cx/afl/">AFL</a> (from <a
+							href="https://www.openbsd.org/faq/faq15.html">packages</a>) to put them
+						through inputs you haven't tested.
+					</p>
+					<p>
+						The thought that <q>this input could never happen</q> is your adversary's favourite.
+						It <i>will</i> happen.
+						Make sure any parsing sequences are being run through as many code-paths as
+						possible with this tool.
+					</p>
+				</section>
+				<section id="sec-docs">
+					<h2>
+						documentation
+					</h2>
+					<p>
+						The strongest part of any BCHS toolchain is its documentation, particularly when using <a
+							href="https://man.openbsd.org">OpenBSD</a>.
+						In developing your application, be inspired to do the same: craft well-written manpages in <a
+							href="https://man.openbsd.org/mdoc">mdoc</a>.
+						There's even a book: <a href="https://manpages.bsd.lv/">Practical UNIX Manpages</a>.
+						Regardless, <a href="https://man.openbsd.org/mandoc">mandoc(1)</a> on your local BSD system will
+						give you plentiful feedback on your syntax.
+					</p>
+					<p>
+						Given that your application involves more than just C (such as, for example, an exported REST
+						API, you may also need to delve into the wild west of web development <q>tools</q>, such as <a
+							href="https://swagger.io/">Swagger</a> or <a href="http://json-schema.org/">JSON
+							Schema</a>.
+					</p>
+					<p>
+						For your SQLite schemas, however, there's always <a
+							href="https://kristaps.bsd.lv/sqliteconvert">sqliteconvert</a> to browse the comments of
+						your schema file.
+					</p>
+				</section>
+				<section id="last">
+					<p>
+						Convinced?
+						See it <a href="easy.html">in action</a>.
+					</p>
+				</section>
+			</article>
+			<article id="trailer">
+				<p>
+					Don't forget: BSD is a community of professionals.
+					Go to conferences (<a href="http://www.eurobsdcon.org">EuroBSDCon</a>, <a
+						href="http://www.asiasbsdcon.org">AsiaBSDCon</a>, <a href="http://www.bsdcan.org">BSDCan</a>,
+					etc.).
+					Subscribe to the <a href="https://www.openbsd.org/mail.html">mailing lists</a>.
+					<a href="https://www.openbsd.org/donations.html">Donate</a>.
+					And lastly but most important of all: use the <a href="https://man.openbsd.org">man pages</a>!
+				</p>
+			</article>
+			<footer>
+				<div>
+					<a href="https://creativecommons.org/licenses/by/4.0/"><i class="fa fa-fw fa-creative-commons"></i></a> 
+					<a rel="author" href="https://github.com/kristapsdz">Kristaps Dzonsons</a>
+				</div>
+			</footer>
+		</section>
+	</body>
+</html>
+
