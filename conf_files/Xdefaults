@@ -1,0 +1,9 @@
+! $OpenBSD: dot.Xdefaults,v 1.3 2014/07/10 10:22:59 jasper Exp $
+XTerm*loginShell:true
+XTerm*selectToClipboard: true
+! Map Ctrl+Shift+C and Ctrl+Shift+V for Copy and Paste
+XTerm*vt100.translations: #override \n\
+    Shift Ctrl <Key>C: copy-selection(CLIPBOARD) \n\
+    Shift Ctrl <Key>V: insert-selection(CLIPBOARD)
+XTerm*faceName: Monospace
+XTerm*faceSize: 12

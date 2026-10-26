@@ -1,0 +1,10 @@
+gnome-terminal
+xterm
+xtermdbus-launch gnome-terminal 
+xterm
+xterm -fa 'Monospace' -fs 14 &
+sudo gparted
+thunar
+xfce4-mime-settings
+thunar
+xterm -e htop
