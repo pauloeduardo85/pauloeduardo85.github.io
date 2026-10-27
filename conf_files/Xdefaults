@@ -6,4 +6,7 @@ XTerm*vt100.translations: #override \n\
     Shift Ctrl <Key>C: copy-selection(CLIPBOARD) \n\
     Shift Ctrl <Key>V: insert-selection(CLIPBOARD)
 XTerm*faceName: Monospace
-XTerm*faceSize: 12
+XTerm*faceSize: 13
+XTerm*background: black
+XTerm*foreground: green
+xterm*ScrollBar: false 
