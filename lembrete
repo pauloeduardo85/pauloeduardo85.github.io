@@ -1,0 +1,4 @@
+grep -Ril "Prime" ./
+grep -nr 'yourString'
+jdbc:postgresql://pg-3d7247b5-pauloeduardo85.k.aivencloud.com:12756/defaultdb
+P94866 / 7QKJ5

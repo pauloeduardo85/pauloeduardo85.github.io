@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: typescript.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: typescript.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Top-level namespace of these objects.
+ * @namespace
+ */
+var ort;
+(function(ort) {
+	'use strict';
+
+	/**
+	 * Convenience function to resolve a set of translated strings into a 
+	 * single one depending upon the current language.
+	 * @param {langmap} vals - All translations of a given word.
+	 * @private
+	 * @function _strlang
+	 * @memberof ort
+	 */
+	function _strlang(vals)
+	{
+		var lang;
+		lang = document.documentElement.lang;
+		if (null !== lang &amp;&amp; lang in vals)
+			return vals[lang];
+		else if ('_default' in vals)
+			return vals['_default'];
+		else
+			return '';
+	}
+
+	/**
+	 * Used exclusively by enumerations and bitfields to do language 
+	 * replacement conditional upon the label (&lt;i>jslabel&lt;/i> in the 
+	 * configuration).
+	 * Like {@link ort._replcl} with inclusion set to false.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {String} name - The class name we search for within the 
+	 * root (not inclusive).
+	 * @param {langmap} vals - All possible translations.
+	 * @private
+	 * @function _replcllang
+	 * @memberof ort
+	 */
+	function _replcllang(e, name, vals)
+	{
+		_replcl(e, name, _strlang(vals), false);
+	}
+
+	/**
+	 * Used exclusively by enumerations and bitfields to do language 
+	 * replacement conditional upon the label (&lt;i>jslabel&lt;/i> in the 
+	 * configuration).
+	 * Like {@link ort._repl}.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {langmap} vals - All possible translations.
+	 * @private
+	 * @function _repllang
+	 * @memberof ort
+	 */
+	function _repllang(e, vals)
+	{
+		_repl(e, _strlang(vals));
+	}
+
+	function _attr(e, attr, text)
+	{
+		if (null !== e)
+			e.setAttribute(attr, text);
+	}
+
+	function _rattr(e, attr)
+	{
+		if (null !== e)
+			e.removeAttribute(attr);
+	}
+
+	/**
+	 * Internal function for checking inputs for all elements of class 
+	 * strct-name-value-checked whose value matches the object's value. 
+	 * If the object is null, all elements are unchecked.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {String} strct - The name of the structure that we're 
+	 * filling in.
+	 * @param {String} name - The name of the field.
+	 * @param {Number|String|null} obj - The data itself.
+	 * @param {Boolean} inc - Whether to include the root element in 
+	 * looking for elements to fill.
+	 * @private
+	 * @function _fillValueChecked
+	 * @memberof ort
+	 */
+	function _fillValueChecked(e, fname, val, inc)
+	{
+		var list;
+		var i;
+		var valstr;
+		fname += '-value-checked';
+		valstr = null === val ? null : 
+			("number" === typeof val ? val.toString() : val);
+		list = _elemList(e, fname, inc);
+		for (i = 0; i &lt; list.length; i++)
+			if (valstr === null)
+				_rattr(list[i], 'checked');
+			else if (valstr === (list[i]).value)
+				_attr(list[i], 'checked', 'true');
+			else
+				_rattr(list[i], 'checked');
+	}
+
+	/**
+	 * Internal function that takes all &lt;code>&amp;lt;option&amp;gt;&lt;/code> 
+	 * elements in the root and sets or unsets their 
+	 * &lt;code>selected&lt;/code> status depending upon whether it matches the 
+	 * object's value.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {Number|String} val - The object's value.
+	 * @private
+	 * @function _fillValueSelect
+	 * @memberof ort
+	 */
+	function _fillValueSelect(e, val)
+	{
+		var list;
+		var i;
+		var v;
+		if (null === e)
+			return;
+		list = e.getElementsByTagName('option');
+		for (i = 0; i &lt; list.length; i++) {
+			v = 'number' === typeof val ? 
+			     parseInt((list[i]).value) :
+			     (list[i]).value;
+			if (val === v)
+				_attr(list[i], 'selected', 'true');
+			else
+				_rattr(list[i], 'selected');
+		}
+	}
+
+	function _attrcl(e, attr, name, text, inc)
+	{
+		var list;
+		var i;
+		if (null === e)
+			return;
+		list = _elemList(e, name, inc);
+		for (i = 0; i &lt; list.length; i++)
+			_attr(list[i], attr, text);
+	}
+
+	function _elemList(e, cls, inc)
+	{
+		var a;
+		var list;
+		var i;
+		a = [];
+		if (null === e)
+			return a;
+		list = e.getElementsByClassName(cls);
+		for (i = 0; i &lt; list.length; i++)
+			a.push(list[i]);
+		if (inc &amp;&amp; e.classList.contains(cls))
+			a.push(e);
+		return a;
+	}
+
+	function _repl(e, text)
+	{
+		if (null === e)
+			return;
+		while (e.firstChild)
+			e.removeChild(e.firstChild);
+		e.appendChild(document.createTextNode(text));
+	}
+
+	/**
+	 * Internal function for filling in ISO-8601 dates.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {String} strct - The name of the structure that we're 
+	 * filling in.
+	 * @param {String} name - The name of the field.
+	 * @param {Number|null} obj - The data itself.
+	 * @param {Boolean} inc - Whether to include the root element in 
+	 * looking for elements to fill.
+	 * @private
+	 * @function _fillDateValue
+	 * @memberof ort
+	 */
+	function _fillDateValue(e, strct, name, val, inc)
+	{
+		var fname;
+		var year;
+		var mo;
+		var day;
+		var full;
+		var d;
+		if (null === val)
+			return;
+		d = new Date();
+		d.setTime(val * 1000);
+		year = d.getFullYear();
+		mo = d.getMonth() + 1;
+		day = d.getDate();
+		full = year + '-' +
+			(mo &lt; 10 ? '0' : '') + mo + '-' +
+			(day &lt; 10 ? '0' : '') + day;
+		fname = strct + '-' + name + '-date-value';
+		_attrcl(e, 'value', fname, full, inc);
+		fname = strct + '-' + name + '-date-text';
+		_replcl(e, fname, full, inc);
+	}
+
+	/**
+	 * Internal function for checking inputs for all elements of class 
+	 * strct-name-bits-checked whose value is the bit-wise AND of the 
+	 * object's value. If the object is null, all elements are unchecked.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {String} strct - The name of the structure that we're 
+	 * filling in.
+	 * @param {String} name - The name of the field.
+	 * @param {Number|null} obj - The data itself.
+	 * @param {Boolean} inc - Whether to include the root element in 
+	 * looking for elements to fill.
+	 * @private
+	 * @function _fillBitsChecked
+	 * @memberof ort
+	 */
+	function _fillBitsChecked(e, strct, name, val, inc)
+	{
+		var list;
+		var fname;
+		var i;
+		var v;
+		fname = strct + '-' + name + '-bits-checked';
+		list = _elemList(e, fname, inc);
+		for (i = 0; i &lt; list.length; i++) {
+			if (val === null) {
+				_rattr(list[i], 'checked');
+				continue;
+			}
+			v = parseInt((list[i]).value);
+			if (isNaN(v))
+				_rattr(list[i], 'checked');
+			else if (0 === v &amp;&amp; 0 === val)
+				_attr(list[i], 'checked', 'true');
+			else if ((1 &lt;&lt; (v - 1)) &amp; val)
+				_attr(list[i], 'checked', 'true');
+			else
+				_rattr(list[i], 'checked');
+		}
+	}
+
+	/**
+	 * Internal function for filling a structure field.
+	 * This first does the has/no class setting for null values, then 
+	 * optionally returns if null (running the custom fields first), 
+	 * otherwise the generic text/value/etc fields, then finally the 
+	 * custom fields.
+	 * @param {HTMLElement} e - The root of the DOM tree in which we 
+	 * query for elements to fill into.
+	 * @param {String} strct - The name of the structure that we're 
+	 * filling in.
+	 * @param {String} name - The name of the field.
+	 * @param {ort.DataCallbacks|null} custom - Custom callback functions 
+	 * to invoke on the field.
+	 * @param obj - The data itself, which is either a native type or one 
+	 * of the data interfaces for an application-specific type.
+	 * @param {Boolean} inc - Whether to include the root element in 
+	 * looking for elements to fill. Note that nested structures are 
+	 * alwyas filled non-inclusively.
+	 * @param {Boolean} cannull - Whether the data object might be null.
+	 * @param {Boolean} isblob - Whether the data object is a blob.
+	 * @param sub - If the data object is a nested structure interface, 
+	 * this is the allocated class of that interface.
+	 * @private
+	 * @function _fillField
+	 * @memberof ort
+	 */
+	function _fillField(e, strct, name, custom, obj, inc, cannull, isblob, sub)
+	{
+		var i;
+		var fname;
+		var list;
+		fname = strct + '-' + name;
+		/* First handle our has/no null situation. */
+		if (cannull) {
+			if (null === obj) {
+				_hidecl(e, strct + '-has-' + name, inc);
+				_showcl(e, strct + '-no-' + name, inc);
+			} else {
+				_showcl(e, strct + '-has-' + name, inc);
+				_hidecl(e, strct + '-no-' + name, inc);
+			}
+		}
+		/* Don't process null values that can be null. */
+		if (cannull &amp;&amp; null === obj) {
+			if (null !== custom &amp;&amp; fname in custom) {
+				if (custom[fname] instanceof Array) {
+					for (i = 0; i &lt; custom[fname].length; i++)
+						custom[fname][i](e, fname, null);
+				} else {
+					custom[fname](e, fname, null);
+				}
+			}
+			return;
+		}
+		/* Non-null non-structs. */
+		/* Don't account for blobs. */
+		if (null !== sub) {
+			list = _elemList(e, fname + '-obj', inc);
+			for (i = 0; i &lt; list.length; i++) {
+				sub.fillInner(list[i], custom);
+			}
+		} else if ( ! isblob) {
+			list = _elemList(e, fname + '-enum-select', inc);
+			for (i = 0; i &lt; list.length; i++) {
+				_fillValueSelect(list[i], obj);
+			}
+			_replcl(e, fname + '-text', obj, inc);
+			_attrcl(e, 'value', fname + '-value', obj, inc);
+			_fillValueChecked(e, fname, obj, inc);
+		}
+		/* Lastly, handle the custom callback. */
+		if (null !== custom &amp;&amp; fname in custom) {
+			if (custom[fname] instanceof Array) {
+				for (i = 0; i &lt; custom[fname].length; i++)
+					custom[fname][i](e, fname, obj);
+			} else {
+				custom[fname](e, fname, obj);
+			}
+		}
+	}
+
+	function _replcl(e, name, text, inc)
+	{
+		var list;
+		var i;
+		if (null === e)
+			return;
+		list = _elemList(e, name, inc);
+		for (i = 0; i &lt; list.length; i++)
+			_repl(list[i], text);
+	}
+
+	function _classadd(e, name)
+	{
+		if (null === e)
+			return(null);
+		if ( ! e.classList.contains(name))
+			e.classList.add(name);
+		return(e);
+	}
+
+	function _classaddcl(e, name, cls, inc)
+	{
+		var list;
+		var i;
+		if (null === e)
+			return;
+		list = _elemList(e, name, inc);
+		for (i = 0; i &lt; list.length; i++)
+			_classadd(list[i], cls);
+	}
+
+	function _hide(e)
+	{
+		if (null === e)
+			return null;
+		if ( ! e.classList.contains('hide'))
+			e.classList.add('hide');
+		return e;
+	}
+
+	function _hidecl(e, name, inc)
+	{
+		var list;
+		var i;
+		if (null === e)
+			return;
+		list = _elemList(e, name, inc);
+		for (i = 0; i &lt; list.length; i++)
+			_hide(list[i]);
+	}
+
+	function _show(e)
+	{
+		if (null === e)
+			return null;
+		if (e.classList.contains('hide'))
+			e.classList.remove('hide');
+		return e;
+	}
+
+	function _showcl(e, name, inc)
+	{
+		var list;
+		var i;
+		if (null === e)
+			return;
+		list = _elemList(e, name, inc);
+		for (i = 0; i &lt; list.length; i++)
+			_show(list[i]);
+	}
+
+	/**
+	 * All possible callback functions for passing to the "custom" 
+	 * associative array when filling in DOM trees.
+	 * @interface ort.DataCallbacks
+	 */
+	/**
+	 * 
+	 * @interface ort.clientData
+	 */
+	/**
+	 * Accepts {@link ort.clientData} for writing into a DOM tree.
+	 * @param {(ort.clientData|ort.clientData[])} obj - The object(s) to 
+	 * write.
+	 * @memberof ort
+	 * @constructor
+	 * @class
+	 */
+	var client = (function()
+	{
+		function client(o)
+		{
+			this.obj = o;
+		}
+		/**
+		 * Write the {@link ort.clientData} into the given HTMLElement in 
+		 * the DOM tree.
+		 * If constructed with an array, the first element is used.
+		 * Elements within (and including) "e" having the following 
+		 * classes are manipulated as follows:
+		 * &lt;ul>
+		 * &lt;li>client-name-enum-select: sets the &lt;code>select&lt;/code> 
+		 * attribute for &lt;code>&amp;lt;option&amp;gt;&lt;/code> values matching 
+		 * &lt;i>name&lt;/i> under the element&lt;/li>
+		 * &lt;li>client-name-value-checked: sets the &lt;code>checked&lt;/code> 
+		 * attribute under the element matching the input&lt;/li>
+		 * &lt;li>client-name-text: replace contents with &lt;i>name&lt;/i> 
+		 * data&lt;/li>
+		 * &lt;li>client-name-value: replace &lt;code>value&lt;/code> attribute 
+		 * with &lt;i>name&lt;/i> data&lt;/li>
+		 * &lt;li>client-dob-enum-select: sets the &lt;code>select&lt;/code> 
+		 * attribute for &lt;code>&amp;lt;option&amp;gt;&lt;/code> values matching 
+		 * &lt;i>dob&lt;/i> under the element&lt;/li>
+		 * &lt;li>client-dob-value-checked: sets the &lt;code>checked&lt;/code> 
+		 * attribute under the element matching the input&lt;/li>
+		 * &lt;li>client-dob-text: replace contents with &lt;i>dob&lt;/i> 
+		 * data&lt;/li>
+		 * &lt;li>client-dob-value: replace &lt;code>value&lt;/code> attribute 
+		 * with &lt;i>dob&lt;/i> data&lt;/li>
+		 * &lt;li>client-dob-date-value: set the element's 
+		 * &lt;code>value&lt;/code> to the ISO-8601 date format of the 
+		 * data&lt;/li>
+		 * &lt;li>client-dob-date-text: like client-dob-date-value, but 
+		 * replacing contents
+		 * &lt;li>client-id-enum-select: sets the &lt;code>select&lt;/code> 
+		 * attribute for &lt;code>&amp;lt;option&amp;gt;&lt;/code> values matching 
+		 * &lt;i>id&lt;/i> under the element&lt;/li>
+		 * &lt;li>client-id-value-checked: sets the &lt;code>checked&lt;/code> 
+		 * attribute under the element matching the input&lt;/li>
+		 * &lt;li>client-id-text: replace contents with &lt;i>id&lt;/i> data&lt;/li>
+		 * &lt;li>client-id-value: replace &lt;code>value&lt;/code> attribute with 
+		 * &lt;i>id&lt;/i> data&lt;/li>
+		 * &lt;/ul>
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {ort.DataCallbacks} custom - The optional dictionary of 
+		 * functions keyed by structure and field name (e.g., &lt;i>foo&lt;/i> 
+		 * structure, &lt;i>bar&lt;/i> field would be &lt;code>foo-bar&lt;/code>). 
+		 * The value is a function for custom handling that accepts the 
+		 * "e" value, the name of the structure-field, and the value of 
+		 * the structure and field.
+		 * You may also specify an array of functions instead of a 
+		 * singleton.
+		 * These callbacks are invoked &lt;b>after&lt;/b> the generic classes 
+		 * are filled.
+		 * @function fill
+		 * @memberof ort.client#
+		 */
+		client.prototype.fill = function(e, custom)
+		{
+			this._fill(e, this.obj, true, custom);
+		};
+
+		/**
+		 * Like {@link ort.client#fill} but instead of accepting a single 
+		 * element to fill, filling into all elements (non-inclusive) 
+		 * matching the given class name beneath (non-inclusive) the 
+		 * given root.
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {String} name - The name of the class into which to 
+		 * fill.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill} for details).
+		 * @function fillByClass
+		 * @memberof ort.client#
+		 */
+		client.prototype.fillByClass = function(e, name, custom)
+		{
+			this._fillByClass(e, name, true, custom);
+		};
+
+		/**
+		 * Like {@link ort.client#fillByClass} but inclusive the root and 
+		 * targets by class.
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {String} name - The name of the class into which to 
+		 * fill.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill} for details).
+		 * @function fillInnerByClass
+		 * @memberof ort.client#
+		 */
+		client.prototype.fillInnerByClass = function(e, name, custom)
+		{
+			this._fillByClass(e, name, false, custom);
+		};
+
+		/**
+		 * Like {@link ort.client#fill} but not including the root 
+		 * element "e".
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill} for details).
+		 * @function fillInner
+		 * @memberof ort.client#
+		 */
+		client.prototype.fillInner = function(e, custom)
+		{
+			this._fill(e, this.obj, false, custom);
+		};
+
+		/**
+		 * Implements all {@link ort.client#fill} functions.
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {ort.clientData|ort.clientData[]|null} o - The object 
+		 * (or array) to fill.
+		 * @param {Boolean} inc - Whether to include the root or not when 
+		 * processing.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill}).
+		 * @private
+		 * @function _fill
+		 * @memberof ort.client#
+		 */
+		client.prototype._fill = function(e, o, inc, custom)
+		{
+			var i;
+			if (null === o || null === e)
+				return;
+			if (o instanceof Array) {
+				if (0 === o.length)
+					return;
+				o = o[0];
+			}
+			if (typeof custom === 'undefined')
+				custom = null;
+			_fillField(e, 'client', 'name', custom, o.name, inc, false, false, null);
+			_fillField(e, 'client', 'dob', custom, o.dob, inc, false, false, null);
+			_fillDateValue(e, 'client', 'dob', o.dob, inc);
+			_fillField(e, 'client', 'id', custom, o.id, inc, false, false, null);
+			if (null !== custom &amp;&amp; 'client' in custom) {
+				if (custom['client'] instanceof Array) {
+					for (i = 0; i &lt; custom['client'].length; i++)
+						(custom['client'])[i](e, 'client', o);
+				} else {
+					(custom['client'])(e, 'client', o);
+				}
+			}
+		};
+
+		/**
+		 * Like {@link ort.client#_fill} but instead of accepting a 
+		 * single element to fill, filling into all elements matching the 
+		 * given class name beneath the given root.
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {String} name - The name of the class into which to 
+		 * fill.
+		 * @param {Boolean} inc - Whether to include the roots or not 
+		 * when processing.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill} for details).
+		 * @private
+		 * @function _fillByClass
+		 * @memberof ort.client#
+		 */
+		client.prototype._fillByClass = function(e, name, inc, custom)
+		{
+			var i;
+			var list;
+			list = _elemList(e, name, inc);
+			for (i = 0; i &lt; list.length; i++)
+				this._fill(list[i], this.obj, inc, custom);
+		};
+
+		/**
+		 * Like {@link ort.client#fillArray}, but hiding an element if 
+		 * the array is empty or null.
+		 * @param {HTMLElement|null} e - The DOM element.
+		 * @param {HTMLElement|null} tohide - The DOM element to hide.
+		 * @param {ort.clientData|ort.clientData[]|null} o - The array 
+		 * (or object) to fill.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill}).
+		 * @function fillArrayOrHide
+		 * @memberof ort.client#
+		 */
+		client.prototype.fillArrayOrHide = function(e, tohide, custom)
+		{
+			var len;
+			if (null === this.obj)
+				len = 0;
+			else if (this.obj instanceof Array)
+				len = this.obj.length;
+			else
+				len = 1;
+			if (null !== e)
+				_hide(e);
+			if (null !== tohide)
+				_show(tohide);
+			this.fillArray(e, custom);
+			if (null !== tohide &amp;&amp; 0 === len)
+				_hide(tohide);
+		};
+		/**
+		 * Like {@link ort.client#fillArray}, but showing an element if 
+		 * the array is empty or null.
+		 * @param {HTMLElement|null} e - The DOM element.
+		 * @param {HTMLElement|null} toshow - The DOM element to show.
+		 * @param {ort.clientData|ort.clientData[]|null} o - The array 
+		 * (or object) to fill.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill}).
+		 * @function fillArrayOrShow
+		 * @memberof ort.client#
+		 */
+		client.prototype.fillArrayOrShow = function(e, toshow, custom)
+		{
+			var len;
+			if (null === this.obj)
+				len = 0;
+			else if (this.obj instanceof Array)
+				len = this.obj.length;
+			else
+				len = 1;
+			if (null !== e)
+				_hide(e);
+			if (null !== toshow)
+				_hide(toshow);
+			this.fillArray(e, custom);
+			if (null !== toshow &amp;&amp; 0 === len)
+				_show(toshow);
+		};
+		/**
+		 * Like {@link ort.client#fill} but for an array of {@link 
+		 * ort.clientData}.
+		 * If the data is not an array, it is remapped as an array of 
+		 * one.
+		 * This will save the first element within "e", remove all 
+		 * children of "e", then repeatedly clone the saved element and 
+		 * re-append it, filling in the cloned subtree with the array 
+		 * (inclusive of the subtree root).
+		 * If the input array is empty or null, "e" is hidden by using 
+		 * the &lt;code>hide&lt;/code> class.
+		 * Otherwise, the &lt;code>hide&lt;/code> class is removed.
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill}).
+		 * @memberof ort.client#
+		 * @function fillArray
+		 */
+		client.prototype.fillArray = function(e, custom)
+		{
+			var j;
+			var o;
+			var cln;
+			var ar;
+			var row;
+			o = this.obj;
+			if (null !== e)
+				_hide(e);
+			if (null === o || null === e)
+				return;
+			if ( ! (o instanceof Array)) {
+				ar = [];
+				ar.push(o);
+				o = ar;
+			}
+			if (0 === o.length)
+				return;
+			_show(e);
+			row = e.children[0];
+			if (null === row)
+				return;
+			e.removeChild(row);
+			while (null !== e.firstChild)
+				e.removeChild(e.firstChild)
+			for (j = 0; j &lt; o.length; j++) {
+				cln = row.cloneNode(true);
+				e.appendChild(cln);
+				this._fill(cln, o[j], true, custom);
+			}
+		};
+		/**
+		 * Like {@link ort.client#fillArray} but instead of accepting a 
+		 * single element to fill, filling all elements by class name 
+		 * beneath the given root (non-inclusive).
+		 * @param {HTMLElement} e - The DOM element.
+		 * @param {String} name - The name of the class into which to 
+		 * fill.
+		 * @param {ort.DataCallbacks} custom - The optional custom 
+		 * handler dictionary (see {@link ort.client#fill} for details).
+		 * @function fillArrayByClass
+		 * @memberof ort.client#
+		 */
+		client.prototype.fillArrayByClass = function(e, name, custom)
+		{
+			var i;
+			var list;
+			list = _elemList(e, name, false);
+			for (i = 0; i &lt; list.length; i++)
+				this.fillArray(list[i], custom);
+		};
+
+		return client;
+	}());
+	ort.client = client;
+
+	ort.client = client;
+})(ort || (ort = {}));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="ort.html">ort</a></li></ul><h3>Classes</h3><ul><li><a href="ort.client.html">client</a></li></ul><h3>Interfaces</h3><ul><li><a href="ort.clientData.html">clientData</a></li><li><a href="ort.DataCallbacks.html">DataCallbacks</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.2</a> on Mon May 11 2020 09:50:52 GMT-0500 (GMT-05:00)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

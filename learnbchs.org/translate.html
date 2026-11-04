@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>le BCHS//openradtool: traduisons !</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500,700" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="highlight.css" />
+		<link rel="stylesheet" href="kwebapp.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="BCHS//openradtool: translation tools" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/translate.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="Manage translations for your openradtool configuration." />
+		<meta name="description" content="Manage translations for your openradtool configuration." />
+	</head>
+	<body>
+		<section itemscope="itemscope" itemtype="http://schema.org/WebPage">
+			<nav class="subnav">
+				openradtool series:
+				<a href="kwebapp.html">introduction</a>, 
+				<a href="rbac.html">RBAC</a>,
+				<a href="auditing.html">role audits</a>,
+				<a href="translate.html">translation</a>,
+				<a href="typescript.html">TypeScript</a>
+			</nav>
+			<header>
+				<img itemprop="image" src="logo-blue.png" alt="BCHS Logo" />
+				<h1>
+					<a href="index.html" itemprop="name">BCHS</a>
+				</h1>
+				<nav>
+					<a href="tools.html"><span>tools</span></a>
+					<a href="easy.html"><span>example</span></a>
+					<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-github"></i></a>
+				</nav>
+			</header>
+			<article>
+				<header>
+					<p>
+						How it usually works: build  <a
+							href="https://kristaps.bsd.lv/openradtool">openradtool</a> configuration and
+						application logic, test, run, profit.
+						Then, one day, check your server logs and see dropped transactions tied to un-satisfied
+						<code>Accept-Language</code> HTTP headers.
+						Dropped transactions = lost revenue.
+						Time to translate!
+					</p>
+					<p>
+						So what are the tools fitting into our <a href="index.html">BCHS</a> stack?
+					</p>
+				</header>
+				<section>
+					<h3>
+						back-end translation
+					</h3>
+					<p>
+						C source translation has a well-known toolchain, usually based on <a
+							href="https://www.gnu.org/software/gettext/">gettext</a> and one of many translation
+						managers (e.g., <a href="https://www.kde.org/applications/development/lokalize/">lokalize</a>).
+						But what do we do about <code>jslabel</code> strings in our <a
+							href="https://kristaps.bsd.lv/openradtool/ort.5.html">ort(5)</a> configuration
+						files?
+					</p>
+					<p>
+						Since version 0.5.1, <a href="https://kristaps.bsd.lv/openradtool">openradtool</a> has had support for
+						<em>in-band</em> multi-language representation of exported strings.
+						Exported strings are <code>jslabel</code> declarations for enumeration and bitfield items that the <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>
+						interface uses to format numerical values as human-readable text.
+						It's handy to manage this in our configuration file because numerical values change and
+						enumerations are augmented over time.
+					</p>
+					<p>
+						For example, we might want to format the enumeration value <var>2</var> of a nationality as
+						<q>Latvia</q> when filling a user entry in the DOM tree.
+						But if the HTML5 page registers itself as <code>&lt;html lang="lv"&gt;</code>, it should instead
+						show <q>Latvija</q>.
+						We then use the <code>jslabel.lv</code> notation for these translations.
+						The whole process is documented in <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html#Enumeration_and_Bitfield_Labels">Enumeration
+							and Bitfield Labels</a>.
+					</p>
+					<figure>
+						<img src="translate-fig2.svg" alt="" />
+						<figcaption>
+							Merging in-band translations for multi-language front-ends.
+						</figcaption>
+					</figure>
+					<p>
+						This is all good and well, but it has a big flaw: the translator (or translation utility) must
+						have knowledge of the <a href="https://kristaps.bsd.lv/openradtool/ort.5.html">ort(5)</a>
+						file format.
+						This is fine for one-off translations that may be merged by a developer, but doesn't scale.
+					</p>
+					<p>
+						So as of 0.5.2, a new tool, <a
+							href="https://kristaps.bsd.lv/openradtool/ort-xliff.1.html">ort-xliff(1)</a>, allows
+						for <em>out-of-band</em> translation, keeping your configuration nice and tidy.
+						XLIFF is an industry-standard tool for maintaining translation dictionaries, and works with most
+						open- and closed-source translation systems.
+						It's documented as <a href="http://docs.oasis-open.org/xliff/xliff-core/xliff-core.html">XLIFF
+							Version 1.2</a>.
+					</p>
+					<figure>
+						<img src="translate-fig1.svg" alt="" />
+						<figcaption>
+							Merging out-of-band XLIFF translations for multi-language front-ends.
+						</figcaption>
+					</figure>
+					<p>
+						This workflow allows you to manage your XLIFF files in any way you'd like&#8212;usually as
+						dictated by your translator or translation service.
+						The XLIFF files themselves are usually simply part of your sources and work with your BCHS
+						system as directed by <code>make(1)</code>.
+						Usually, the XLIFF files are initially derived from the source configuration, translated, then
+						merged back in.
+						The post-merge configuration is then passed to <a
+							href="https://kristaps.bsd.lv/openradtool/ort-javascript.1.html">ort-javascript(1)</a>.
+					</p>
+					<h3>
+						front-end translation
+					</h3>
+					<p>
+						What about the HTML5 front-end material?
+						Given that they have the most text to translate, it stands to reason that we should spend the
+						most time thinking about them.
+					</p>
+					<p>
+						There already exist several tools that are purpose-built for XML documents, amont them <a
+							href="https://freedesktop.org/wiki/Software/intltool/">intltool</a>.
+						However, our toolchain is designed to work with XLIFF files.
+						(The  <a href="https://freedesktop.org/wiki/Software/intltool/">intltool</a> suite works with <a
+							href="https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html">PO</a>
+						files.)
+						Enter <a href="https://kristaps.bsd.lv/sintl">sintl</a>, which works specifically with HTML5
+						documents and XLIFF, specifically deriving from the
+						<a
+							href="http://docs.oasis-open.org/xliff/v1.2/xliff-profile-html/xliff-profile-html-1.2-cd02.html">XLIFF
+							1.2 Representation Guide for HTML</a>.
+						It completes the tool-chain for the HTML5 aspect.
+					</p>
+					<figure>
+						<img class="narrow" src="translate-fig3.svg" alt="" />
+						<figcaption>
+							Creating and merging out-of-band XLIFF translations.
+						</figcaption>
+					</figure>
+					<p>
+						By pairing these two strategies, your <a href="index.html">BCHS</a> web application can have
+						full out-of-band translation, leaving you to develop your templates and application logic,
+						leaving the translations to the translators.
+					</p>
+					<h3>
+						acknowledgements
+					</h3>
+					<p>
+						I'd like to thank CAPEM Solutions, Inc., for funding this development and agreeing that it bests
+						serves the community as open source.
+					</p>
+				</section>
+			</article>
+			<footer>
+				<div>
+					<a href="https://creativecommons.org/licenses/by/4.0/"><i class="fa fa-creative-commons"></i></a> 
+					<a rel="author" href="https://kristaps.bsd.lv">Kristaps Dzonsons</a>
+				</div>
+			</footer>
+		</section>
+	</body>
+</html>
+
