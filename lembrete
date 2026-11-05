@@ -1,4 +1,9 @@
-grep -Ril "Prime" ./
 grep -nr 'yourString'
-jdbc:postgresql://pg-3d7247b5-pauloeduardo85.k.aivencloud.com:12756/defaultdb
-P94866 / 7QKJ5
+--- como criar uma swapfile de 300MB ---
+sudo fallocate -l 300M /swapfile
+du -sh /swapfile 
+sudo dd if=/dev/zero of=/swapfile bs=1024 count=307200
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+/swapfile none swap defaults 0 0
+----------------------------------------
