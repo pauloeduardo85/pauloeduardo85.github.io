@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>BCHS: an easy example</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="highlight.css" />
+		<link rel="stylesheet" href="easy.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="BCHS: an easy example" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/easy.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="&quot;Hello, World!&quot; primer for BCHS." />
+		<meta name="description" content="&quot;Hello, World!&quot; primer for BCHS." />
+	</head>
+	<body>
+		<header>
+			<a href="index.html">
+				<img src="logo-white.png" alt="BCHS Logo" />
+			</a>
+			<h1>
+				<a href="index.html" itemprop="name">BSD, C, httpd, SQLite</a>
+			</h1>
+			<nav>
+				<div>
+					Navigate: <a href="index.html">home</a>, <a href="tools.html">tools</a>, <span>example</span>.
+				</div>
+				<div>
+					<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-fw fa-github"></i></a>
+					<a href="report/index.html"><i class="fa fa-fw fa-server"></i></a>
+				</div>
+			</nav>
+		</header>
+		<input type="radio" name="steps" id="slider1" value="step1" checked="checked" />
+		<input type="radio" name="steps" id="slider2" value="step2" />
+		<input type="radio" name="steps" id="slider3" value="step3" />
+		<nav>
+			<label for="slider1">
+				cgi.c
+				<img src="arrow-left.png" alt="left" />
+			</label>
+			<label for="slider2">
+				<img src="arrow-right.png" alt="right" />
+				httpd.conf
+			</label>
+			<label for="slider3">
+				<img src="arrow-right-long.png" class="long" alt="riiiiight" />
+				setup
+			</label>
+		</nav>
+		<div class="slides">
+			<div class="overflow">
+				<div class="slidesinner">
+					<section>
+						<div>
+							<figure>
+								<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl ppc">#include &lt;err.h&gt;</span> <span class="hl com">/* err(3) */</span><span class="hl ppc"></span>
+<span class="hl lin">    2 </span><span class="hl ppc">#include &lt;stdlib.h&gt;</span> <span class="hl com">/* EXIT_xxxx */</span><span class="hl ppc"></span>
+<span class="hl lin">    3 </span><span class="hl ppc">#include &lt;stdio.h&gt;</span> <span class="hl com">/* puts(3) */</span><span class="hl ppc"></span>
+<span class="hl lin">    4 </span><span class="hl ppc">#include &lt;unistd.h&gt;</span> <span class="hl com">/* pledge(2) */</span><span class="hl ppc"></span>
+<span class="hl lin">    5 </span>
+<span class="hl lin">    6 </span><span class="hl kwb">int</span>
+<span class="hl lin">    7 </span><span class="hl kwd">main</span><span class="hl opt">(</span><span class="hl kwb">void</span><span class="hl opt">)</span>
+<span class="hl lin">    8 </span><span class="hl opt">{</span>
+<span class="hl lin">    9 </span>    <span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span> 
+<span class="hl lin">   10 </span>        <span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   11 </span>    <span class="hl kwd">puts</span><span class="hl opt">(</span><span class="hl str">&quot;Status: 200 OK</span><span class="hl esc">\r</span><span class="hl str">&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   12 </span>    <span class="hl kwd">puts</span><span class="hl opt">(</span><span class="hl str">&quot;Content-Type: text/html</span><span class="hl esc">\r</span><span class="hl str">&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   13 </span>    <span class="hl kwd">puts</span><span class="hl opt">(</span><span class="hl str">&quot;</span><span class="hl esc">\r</span><span class="hl str">&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   14 </span>    <span class="hl kwd">puts</span><span class="hl opt">(</span><span class="hl str">&quot;Hello, world!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   15 </span>    <span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">   16 </span><span class="hl opt">}</span>
+</pre></article>
+							</figure>
+							<p>
+								This is your code.
+								Read it: it&#x2019;s exactly what&#x2019;s going to happen.
+								No mysticism.
+							</p>
+							<p>
+								What&#x2019;s going on?
+								<a href="https://man.openbsd.org/pledge.2">pledge(2)</a> makes sure
+								you&#x2019;re only doing what you want to do: work with existing descriptors.
+								The rest is just HTTP.
+								Don&#x2019;t want to work with HTTP?
+								Use <a href="https://kristaps.bsd.lv/kcgi">kcgi(3)</a> or equivalent.
+							</p>
+							<p>
+								Want more examples?
+								See <a href="https://kristaps.bsd.lv/absdcon2016">Secure CGI Applications in C
+									on BSD</a> and <a href="https://kristaps.bsd.lv/absdcon2017/">Secure
+									CGI</a>.
+							</p>
+							<footer>
+								<div>
+									<a href="https://creativecommons.org/licenses/by/4.0/">
+										<i class="fa fa-fw fa-creative-commons"></i>
+									</a> 
+									<a rel="author" href="https://github.com/kristapsdz">
+										Kristaps Dzonsons
+									</a>
+								</div>
+							</footer>
+						</div>
+					</section>
+					<section>
+						<div>
+							<figure>
+								<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwa">ext_addr</span>=<span class="hl str">&quot;*&quot;</span>
+<span class="hl lin">    2 </span>
+<span class="hl lin">    3 </span><span class="hl kwa">server</span> <span class="hl str">&quot;localhost&quot;</span> {
+<span class="hl lin">    4 </span>    listen on $ext_addr port <span class="hl kwb">80</span>
+<span class="hl lin">    5 </span>    location <span class="hl str">&quot;/cgi-bin/*&quot; {</span>
+<span class="hl lin">    6 </span><span class="hl str">        fastcgi</span>
+<span class="hl lin">    7 </span><span class="hl str">        root &quot;</span><span class="hl kwc">/&quot;</span>
+<span class="hl lin">    8 </span>    }
+<span class="hl lin">    9 </span>}
+</pre></article>
+							</figure>
+							<p>
+								<a href="https://man.openbsd.org/httpd.conf.5">httpd.conf(5)</a>
+								is so&#8230; <i>simple</i>.
+								Server tells us the name.
+								Listen tells us to listen.
+								Location tells us a location.
+								Where we have FastCGI.  
+								Relative to the root.
+							</p>
+							<p>
+								Don&#x2019;t like FastCGI?
+								Neither do we.
+								But we&#x2019;re not using it for this example: in the next snippet,
+								we&#x2019;ll use <a href="https://man.openbsd.org/slowcgi.8">slowcgi(8)</a> to
+								invoke our CGI.
+								So relax.
+							</p>
+							<p>
+								Want more examples?
+								See <a href="https://kristaps.bsd.lv/absdcon2016">Secure CGI Applications in C
+									on BSD</a> and <a href="https://kristaps.bsd.lv/absdcon2017/">Secure
+									CGI</a>.
+							</p>
+							<footer>
+								<div>
+									<a href="https://creativecommons.org/licenses/by/4.0/">
+										<i class="fa fa-fw fa-creative-commons"></i>
+									</a> 
+									<a rel="author" href="https://github.com/kristapsdz">
+										Kristaps Dzonsons
+									</a>
+								</div>
+							</footer>
+						</div>
+					</section>
+					<section>
+						<div>
+							<figure>
+								<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl slc">#! /bin/sh</span>
+<span class="hl lin">    2 </span>cc <span class="hl kwb">-static -g -W -Wall -Wextra -o</span> cgi cgi.c
+<span class="hl lin">    3 </span>doas <span class="hl kwc">install</span> <span class="hl kwb">-o</span> www <span class="hl kwb">-g</span> www <span class="hl kwb">-m</span> <span class="hl num">0500</span> cgi <span class="hl opt">/</span>var<span class="hl opt">/</span>www<span class="hl opt">/</span>cgi-bin
+<span class="hl lin">    4 </span>doas rcctl <span class="hl kwb">enable</span> slowcgi
+<span class="hl lin">    5 </span>doas rcctl start slowcgi
+<span class="hl lin">    6 </span>doas rcctl check slowcgi
+<span class="hl lin">    7 </span>doas rcctl restart httpd
+</pre></article>
+							</figure>
+							<p>
+								Wow.  Very configure.
+								Compiles the script.  Installs it.
+								Makes sure <a href="https://man.openbsd.org/slowcgi.8">slowcgi(8)</a> and of
+								course <a href="https://man.openbsd.org/httpd.8">httpd(8)</a> are running.
+								Done.
+							</p>
+							<p>
+								Want more examples?
+								See <a href="https://kristaps.bsd.lv/absdcon2016">Secure CGI Applications in C
+									on BSD</a> and <a href="https://kristaps.bsd.lv/absdcon2017/">Secure
+									CGI</a>.
+							</p>
+							<footer>
+								<div>
+									<a href="https://creativecommons.org/licenses/by/4.0/">
+										<i class="fa fa-fw fa-creative-commons"></i>
+									</a> 
+									<a rel="author" href="https://github.com/kristapsdz">
+										Kristaps Dzonsons
+									</a>
+								</div>
+							</footer>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+
+

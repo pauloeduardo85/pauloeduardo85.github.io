@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>BCHS//ksql: split-process SQLite</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="highlight.css" />
+		<link rel="stylesheet" href="ksql.css" />
+		<link rel="shortcut icon" type="image/png" href="/favicon-196x196.png" />
+		<link rel="shortcut icon" sizes="196x196" href="/favicon-196x196.png" />
+		<link rel="apple-touch-icon" href="/favicon-196x196.png" />
+		<meta property="og:title" content="BCHS and ksql: split-process SQLite" />
+		<meta property="og:image" content="https://learnbchs.org/logo-blue.png" />
+		<meta property="og:url" content="https://learnbchs.org/ksql.html" />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="Sequestering database operations in a protected process." />
+		<meta name="description" content="Sequestering database operations in a protected process." />
+	</head>
+	<body>
+		<section itemscope="itemscope" itemtype="http://schema.org/WebPage">
+			<header>
+				<img itemprop="image" src="logo-blue.png" alt="BCHS Logo" />
+				<h1>
+					<a href="index.html" itemprop="name">BCHS</a>
+				</h1>
+				<nav>
+					<a href="tools.html"><span>tools</span></a>
+					<a href="easy.html"><span>example</span></a>
+					<a href="https://github.com/kristapsdz/bchs"><i class="fa fa-github"></i></a>
+				</nav>
+			</header>
+			<article>
+				<p class="tldr">
+					<b>tl;dr</b>: the new split-process mode of <a href="https://kristaps.bsd.lv/ksql">ksql</a> 
+					constrains SQLite database operations to a child process, allowing the caller to <a href="https://man.openbsd.org/pledge.2">pledge(2)</a> better.
+				</p>
+				<p>
+					I use <a href="https://sqlite.org">SQLite</a> a lot because managing a <q>big</q> database is a pain in
+					the ass and my database needs are few.  Most of these uses are within small to medium-size web
+					applications, so security (see <q>web</q>) is very important.
+				</p>
+				<p>
+					One thing that bothers me security-wise about using SQLite is that it opens files during run-time.
+					The main database might be opened immediately, but auxiliary files (<a href="https://sqlite.org/tempfiles.html">WAL, journal, etc.</a>) might be opened at any time.
+					And according to the documentation, even the names and locations of these files aren't fixed
+					(although <a href="https://github.com/bapt">bapt</a> has implemented a 
+					<a href="https://github.com/freebsd/pkg/blob/master/libpkg/pkgdb.c">clever solution</a> for keeping
+					files under the same root).
+					Take a <a href="https://sqlite.org/wal.html">WAL mode</a> example&#8230;
+				</p>
+				<pre>% ls -l /var/www/data/
+total 604
+-rw-rw-rw-  1 root  daemon  220160 Dec 12  2016 cgi.db
+-rw-rw-rw-  1 www   daemon   32768 Dec 12  2016 cgi.db-shm
+-rw-rw-rw-  1 www   daemon   30424 May  3  2016 cgi.db-wal</pre>
+				<p>
+					One database, one shared-memory file, one WAL file.
+					The database is created beforehand; the latter two are created on demand.
+					(<b>Note</b>: <code>/dev/null</code> may also be required&#8230;)
+					So what's the problem?
+					The run-time files prevent me from using <a href="pledge.html">pledge</a> intelligently within my
+					applications, as I must accommodate for opening (and processing) new files.
+					In most web applications, <code>stdio</code> is the only promise that's required by the CGI bits.
+					(CGI and FastCGI communicate over pre-opened descriptors.)
+					But because of SQLite, I need to let in a whole lot more.
+				</p>
+				<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl com">/*</span>
+<span class="hl lin">    2 </span><span class="hl com"> * Required to create database temporary files, read and write from</span>
+<span class="hl lin">    3 </span><span class="hl com"> * them, and perform file-system operations (flock and fattr).</span>
+<span class="hl lin">    4 </span><span class="hl com"> */</span>
+<span class="hl lin">    5 </span>
+<span class="hl lin">    6 </span><span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio rpath cpath wpath flock fattr&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">    7 </span>	<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+</pre></article>
+				<p>
+					Not good!
+					It's true that new processes can't be launched, nor can sockets be opened, but the database (and all
+					other databases in the web server's root) are open for exploitation.
+					Surely we can do better?
+				</p>
+				<p>
+					A few years ago, I wrote <a href="https://kristaps.bsd.lv/ksql">ksql</a> to mandate that database access
+					errors should cause program termination, and program termination should safely close the database.
+					One too many times, a database error had been ignored from sloppy programming and had caused mysterious
+					failures&#8212;<q>fool me once</q>&#8230;
+					It occurred to me that I could extend the system to use the same model as in <a href="https://kristaps.bsd.lv/kcgi">kcgi</a>: constraining the vulnerable database access in
+					a child process.
+					Something like&#8230;
+				</p>
+				<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">socketpair</span><span class="hl opt">(</span>AF_UNIX<span class="hl opt">,</span> SOCK_STREAM<span class="hl opt">,</span> <span class="hl num">0</span><span class="hl opt">,</span> fd<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">    2 </span>	<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;socketpair&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">    3 </span>
+<span class="hl lin">    4 </span><span class="hl kwa">if</span> <span class="hl opt">((</span>pid <span class="hl opt">=</span> <span class="hl kwd">fork</span><span class="hl opt">()) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">    5 </span>	<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;fork&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">    6 </span>
+<span class="hl lin">    7 </span><span class="hl kwa">if</span> <span class="hl opt">(</span>pid <span class="hl opt">==</span> <span class="hl num">0</span><span class="hl opt">) {</span>
+<span class="hl lin">    8 </span>	<span class="hl kwd">close</span><span class="hl opt">(</span>fd<span class="hl opt">[</span><span class="hl num">1</span><span class="hl opt">]);</span>
+<span class="hl lin">    9 </span>	<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio rpath cpath wpath flock fattr&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">   10 </span>		<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   11 </span>	<span class="hl com">/* Exchange data with master over fd[0]. */</span>
+<span class="hl lin">   12 </span>	<span class="hl kwd">exit</span><span class="hl opt">(</span>EXIT_SUCCESS<span class="hl opt">);</span>
+<span class="hl lin">   13 </span><span class="hl opt">}</span>
+<span class="hl lin">   14 </span>
+<span class="hl lin">   15 </span><span class="hl kwd">close</span><span class="hl opt">(</span>fd<span class="hl opt">[</span><span class="hl num">0</span><span class="hl opt">]);</span>
+<span class="hl lin">   16 </span><span class="hl com">/* Exchange data with database over fd[1]. */</span>
+<span class="hl lin">   17 </span><span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">   18 </span>	<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+</pre></article>
+				<p>
+					This way, a constrained child process would manage the database.
+					The master process, enacting my web application's <q>business logic</q>, would be completely sandboxed
+					and unable to access the database except over a communication socket.
+				</p>
+				<p>
+					Since ksql wraps a small subset over the <a href="https://sqlite.org/capi3ref.html">SQLite C API</a>,
+					it's manageable to enable each function individually.
+					Only about 30 functions need to be fitted with split-process bits.
+				</p>
+				<figure>
+					<img src="ksql-fig3.svg" alt="Interprocess communication" />
+					<figcaption>
+						The database is securely managed by a child process and communicates with the main web
+						application process over sockets.
+					</figcaption>
+				</figure>
+				<p>
+					For the time being, the protocol is an overly simple (read: slow and inefficient) one: open a
+					non-blocking socket pair, fork, pass the pair to the child and parent.
+					The child then opens and works with the database with a <a href="https://man.openbsd.org/pledge.2">pledge(2)</a> set for file access.
+					(In the event that the original single-process model is used, none of this overhead is invoked.)
+				</p>
+				<p>
+					Following invocation, the parent caller usually will pledge for <code>stdio</code> and whatever else is
+					required by the application.
+				</p>
+				<p>
+					All in all, this roughly doubled the code-base size.
+					See it for yourself in <a href="https://github.com/kristapsdz/ksql/blob/VERSION_0_1_0/ksql.c">ksql.c</a>
+					(available as of the <b>0.1.0</b> release).
+					The only bits needed to enable split-process mode are calling <a href="https://kristaps.bsd.lv/ksql/ksql_alloc_child.3.html">ksql_alloc_child(3)</a> instead of
+					<a href="https://kristaps.bsd.lv/ksql/ksql_alloc.3.html">ksql_alloc(3)</a> on initialisation.
+				</p>
+				<p>
+					For example, the following simple application opens the database, then sandboxes itself.
+					Note that the ksql functions aren't checked for errors since the default behaviour is to exit on
+					database errors.
+					(Technically the calls to <a href="https://kristaps.bsd.lv/ksql/ksql_close.3.html">ksql_close(3)</a> and
+					<a href="https://kristaps.bsd.lv/ksql/ksql_free.3.html">ksql_free(3)</a> are superfluous, but let's be
+					tidy.)
+				</p>
+				<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwb">int</span>
+<span class="hl lin">    2 </span><span class="hl kwd">main</span><span class="hl opt">(</span><span class="hl kwb">void</span><span class="hl opt">)</span>
+<span class="hl lin">    3 </span><span class="hl opt">{</span>
+<span class="hl lin">    4 </span>	<span class="hl kwb">struct</span> ksql	<span class="hl opt">*</span>sql<span class="hl opt">;</span>
+<span class="hl lin">    5 </span>	<span class="hl kwb">struct</span> ksqlstmt	<span class="hl opt">*</span>stmt<span class="hl opt">;</span>
+<span class="hl lin">    6 </span>	<span class="hl kwb">size_t</span>		 i<span class="hl opt">;</span>
+<span class="hl lin">    7 </span>	<span class="hl kwb">char</span>		 buf<span class="hl opt">[</span><span class="hl num">64</span><span class="hl opt">];</span>
+<span class="hl lin">    8 </span>	<span class="hl kwb">uint32_t</span>	 val<span class="hl opt">;</span>
+<span class="hl lin">    9 </span>
+<span class="hl lin">   10 </span>	<span class="hl kwa">if</span> <span class="hl opt">((</span>sql <span class="hl opt">=</span> <span class="hl kwd">ksql_alloc_child</span><span class="hl opt">(</span>NULL<span class="hl opt">,</span> NULL<span class="hl opt">,</span> NULL<span class="hl opt">)) ==</span> NULL<span class="hl opt">)</span>
+<span class="hl lin">   11 </span>		<span class="hl kwd">errx</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;ksql_alloc_child&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   12 </span>
+<span class="hl lin">   13 </span>	<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">   14 </span>		<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   15 </span>
+<span class="hl lin">   16 </span>	<span class="hl kwd">ksql_open</span><span class="hl opt">(</span>sql<span class="hl opt">,</span> <span class="hl str">&quot;test.db&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   17 </span>
+<span class="hl lin">   18 </span>	<span class="hl kwd">ksql_stmt_alloc</span><span class="hl opt">(</span>sql<span class="hl opt">, &amp;</span>stmt<span class="hl opt">,</span> <span class="hl str">&quot;INSERT INTO &quot;</span>
+<span class="hl lin">   19 </span>		<span class="hl str">&quot;test (foo,bar) VALUES (?,?)&quot;</span><span class="hl opt">,</span> <span class="hl num">1</span><span class="hl opt">);</span>
+<span class="hl lin">   20 </span>	<span class="hl kwa">for</span> <span class="hl opt">(</span>i <span class="hl opt">=</span> <span class="hl num">0</span><span class="hl opt">;</span> i <span class="hl opt">&lt;</span> <span class="hl num">10</span><span class="hl opt">;</span> i<span class="hl opt">++) {</span>
+<span class="hl lin">   21 </span>		val <span class="hl opt">=</span> <span class="hl kwd">arc4random</span><span class="hl opt">();</span>
+<span class="hl lin">   22 </span>		<span class="hl kwd">snprintf</span><span class="hl opt">(</span>buf<span class="hl opt">,</span> <span class="hl kwa">sizeof</span><span class="hl opt">(</span>buf<span class="hl opt">),</span> <span class="hl str">&quot;%&quot;</span> PRIu32<span class="hl opt">,</span> val<span class="hl opt">);</span>
+<span class="hl lin">   23 </span>		<span class="hl kwd">ksql_bind_int</span><span class="hl opt">(</span>stmt<span class="hl opt">,</span> <span class="hl num">0</span><span class="hl opt">,</span> val<span class="hl opt">);</span>
+<span class="hl lin">   24 </span>		<span class="hl kwd">ksql_bind_str</span><span class="hl opt">(</span>stmt<span class="hl opt">,</span> <span class="hl num">1</span><span class="hl opt">,</span> buf<span class="hl opt">);</span>
+<span class="hl lin">   25 </span>		<span class="hl kwd">ksql_stmt_step</span><span class="hl opt">(</span>stmt<span class="hl opt">);</span>
+<span class="hl lin">   26 </span>		<span class="hl kwd">ksql_stmt_reset</span><span class="hl opt">(</span>stmt<span class="hl opt">);</span>
+<span class="hl lin">   27 </span>	<span class="hl opt">}</span>
+<span class="hl lin">   28 </span>	<span class="hl kwd">ksql_stmt_free</span><span class="hl opt">(</span>stmt<span class="hl opt">);</span>
+<span class="hl lin">   29 </span>	<span class="hl kwd">ksql_close</span><span class="hl opt">(</span>sql<span class="hl opt">);</span>
+<span class="hl lin">   30 </span>	<span class="hl kwd">ksql_free</span><span class="hl opt">(</span>sql<span class="hl opt">);</span>
+<span class="hl lin">   31 </span>
+<span class="hl lin">   32 </span>	<span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">   33 </span><span class="hl opt">}</span>
+</pre></article>
+				<p>
+					A much more reasonable sandbox.
+				</p>
+				<p>
+					In a web application that combines <a href="https://kristaps.bsd.lv/kcgi">kcgi</a> and <a href="https://kristaps.bsd.lv/ksql">ksql</a>, both the parsing of validation of data
+					<i>and</i> database import and export are all performed separately from the main CGI script.
+					So all <q>vulnerable</q> operations (touching network, touching files&#8212;the attack surface being
+					<span style="color: red;">coloured in red</span>) of such applications are now limited to sandboxed child processes.
+				</p>
+				<figure>
+					<img src="ksql-fig6.svg" alt="Interprocess communication" />
+					<figcaption>
+						All parts being compartmentalised.
+					</figcaption>
+				</figure>
+				<p>
+					Not only does this protect your application from bad input, it also protects your database from you!
+				</p>
+				<p>
+					I've already added the functionality to <a href="https://kristaps.bsd.lv/openradtool">openradtool</a>
+					(this system was discussed <a href="kwebapp.html">here</a>) as of <b>0.2.8</b> to make this even easier
+					to use.  Assuming we've generated a database API exporting the usual <code>db_open</code>
+					function&#8230;
+				</p>
+				<article data-sblg-article="1">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwb">int</span>
+<span class="hl lin">    2 </span><span class="hl kwd">main</span><span class="hl opt">(</span><span class="hl kwb">void</span><span class="hl opt">)</span>
+<span class="hl lin">    3 </span><span class="hl opt">{</span>
+<span class="hl lin">    4 </span>	<span class="hl kwb">struct</span> kreq r<span class="hl opt">;</span>
+<span class="hl lin">    5 </span>	<span class="hl kwb">const char</span> <span class="hl opt">*</span>pages <span class="hl opt">=</span> <span class="hl str">&quot;index&quot;</span><span class="hl opt">;</span>
+<span class="hl lin">    6 </span>
+<span class="hl lin">    7 </span>	<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">khttp_parse</span><span class="hl opt">(&amp;</span>r<span class="hl opt">,</span> NULL<span class="hl opt">,</span> <span class="hl num">0</span><span class="hl opt">, &amp;</span>pages<span class="hl opt">,</span> <span class="hl num">1</span><span class="hl opt">,</span> <span class="hl num">0</span><span class="hl opt">) !=</span> KCGI_OK<span class="hl opt">)</span>
+<span class="hl lin">    8 </span>		<span class="hl kwd">errx</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;khttp_parse&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">    9 </span>
+<span class="hl lin">   10 </span>	<span class="hl kwa">if</span> <span class="hl opt">((</span>r<span class="hl opt">.</span>arg <span class="hl opt">=</span> <span class="hl kwd">db_open</span><span class="hl opt">(</span><span class="hl str">&quot;/data/foo.db&quot;</span><span class="hl opt">)) ==</span> NULL<span class="hl opt">)</span>
+<span class="hl lin">   11 </span>		<span class="hl kwd">errx</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;db_open&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   12 </span>
+<span class="hl lin">   13 </span>	<span class="hl kwa">if</span> <span class="hl opt">(</span><span class="hl kwd">pledge</span><span class="hl opt">(</span><span class="hl str">&quot;stdio&quot;</span><span class="hl opt">,</span> NULL<span class="hl opt">) == -</span><span class="hl num">1</span><span class="hl opt">)</span>
+<span class="hl lin">   14 </span>		<span class="hl kwd">err</span><span class="hl opt">(</span>EXIT_FAILURE<span class="hl opt">,</span> <span class="hl str">&quot;pledge&quot;</span><span class="hl opt">);</span>
+<span class="hl lin">   15 </span>
+<span class="hl lin">   16 </span>	<span class="hl com">/* Perform actions in a sandbox. */</span>
+<span class="hl lin">   17 </span>
+<span class="hl lin">   18 </span>	<span class="hl kwd">db_close</span><span class="hl opt">(</span>r<span class="hl opt">.</span>arg<span class="hl opt">);</span>
+<span class="hl lin">   19 </span>	<span class="hl kwd">khttp_free</span><span class="hl opt">(&amp;</span>r<span class="hl opt">);</span>
+<span class="hl lin">   20 </span>	<span class="hl kwa">return</span> EXIT_SUCCESS<span class="hl opt">;</span>
+<span class="hl lin">   21 </span><span class="hl opt">}</span>
+</pre></article>
+				<p>
+					What can be improved in ksql's split-process model?
+					A lot.
+				</p>
+				<p>
+					For starters, the protocol can be significantly (make that <q><i>significantly</i></q>) improved.
+					Right now, it has a lot of reads and writes that can be consolidated into one: a header frame with most
+					data, followed by additional data in the event of strings.
+					In fact, any request can be limited to two transmissions: a header frame and a data frame.
+					Most requests will only have the header.
+					(Those with string or blob values will need the extra frame.)
+				</p>
+				<p>
+					It's also rather easy to add other sandboxes.
+					But since I generally only use <a href="https://www.openbsd.org">OpenBSD</a>, I'm not there yet!
+				</p>
+			</article>
+			<footer>
+				<div>
+					<a href="https://creativecommons.org/licenses/by/4.0/"><i class="fa fa-creative-commons"></i></a> 
+					<a rel="author" href="https://kristaps.bsd.lv">Kristaps Dzonsons</a>
+				</div>
+			</footer>
+		</section>
+	</body>
+</html>
+
+
