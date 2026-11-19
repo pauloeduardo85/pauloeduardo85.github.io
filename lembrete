@@ -20,3 +20,5 @@ LAB UNIMED
 Solicitação de Serviço 2026SS/0000937255 criada com sucesso. 
 ---------------------------------------
 sudo rmmod kvm_intel
+---------------------------------------
+while true; do bash curlbrb.sh; sleep 600; done
