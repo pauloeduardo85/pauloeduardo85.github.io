@@ -1,0 +1,28 @@
+grep -nr 'yourString'
+--- como criar uma swapfile de 300MB ---
+sudo fallocate -l 300M /swapfile
+du -sh /swapfile 
+sudo dd if=/dev/zero of=/swapfile bs=1024 count=307200
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+/swapfile none swap defaults 0 0
+----------------------------------------
+--- conectar wifi cli ---
+nmcli device wifi list
+nmcli device wifi connect "YOUR_SSID" password "YOUR_PASSWORD"
+----------------------------------------
+LAB MARTINS PINTO
+P94866 9FQNT
+---------------------------------------
+LAB UNIMED
+05236585406 Não sabemos
+---------------------------------------
+Solicitação de Serviço 2026SS/0000937255 criada com sucesso. 
+---------------------------------------
+sudo rmmod kvm_intel
+---------------------------------------
+while true; do bash curlbrb.sh; sleep 600; done
+---------------------------------------
+https://neo4j.com/docs/getting-started/cypher/
+:use system
+CREATE OR REPLACE DATABASE neo4j;
